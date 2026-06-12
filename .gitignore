@@ -1,0 +1,11 @@
+dataset/
+__pycache__/
+checkpoints/
+logs/
+train.log.txt
+tree.py
+*.ipynb_checkpoints
+.env
+*.pth
+*.pt
+*.weights
