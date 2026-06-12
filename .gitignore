@@ -1,15 +1,22 @@
 dataset/
-__pycache__/
-checkpoints/
-logs/
-train.log.txt
-tree.py
-*.ipynb_checkpoints
-.env
 *.pth
 *.pt
 *.weights
-git rm -r --cached evaluation_results/
-git rm -r --cached evaluation_resultsingle/
-git rm -r --cached log/
-git rm -r --cached *.txt
+
+
+logs/
+log/
+evaluation_results/
+evaluation_resultsingle/
+ggtest/
+*.txt
+train.log.txt
+
+
+__pycache__/
+.ipynb_checkpoints/
+.env
+.DS_Store
+
+
+tree.py
