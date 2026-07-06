@@ -6,14 +6,18 @@ from b_model import UNetGenerator
 
 # TEST_DATA_ROOT should point to a single grayscale image file for b_test_single
 TEST_DATA_ROOT = Path(r"G:/CV/pj/ggtest/images.jpg")
-CHECKPOINT_DIR = Path(r"G:/CV/pj/checkpoints")
-BASE_OUTPUT_DIR = Path(r"G:/CV/pj/evaluation_resultsingle")
+CHECKPOINT_DIR = Path(r"G:/CV/pj/b_checkpoints")
+BASE_OUTPUT_DIR = Path(r"G:/CV/pj/b_evaluation_results")
 
 # =====================================================================
 LIST_CHECKPOINTS = [
     "gen_0.pth",
     "gen_1.pth",
-    "gen_2.pth"
+    "gen_2.pth",
+    "gen_3.pth",
+    "gen_4.pth",
+    "gen_5.pth",
+    "gen_6.pth"
 ]
 # =====================================================================
 

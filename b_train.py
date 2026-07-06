@@ -8,10 +8,10 @@ from b_model import UNetGenerator, PatchDiscriminator
 
 # --- CẤU HÌNH ---
 DATA_ROOT = Path(r"G:/CV/pj/dataset/train")
-CHECKPOINT_DIR = Path(r"G:/CV/pj/checkpoints")
+CHECKPOINT_DIR = Path(r"G:/CV/pj/b_checkpoints")
 CHECKPOINT_DIR.mkdir(exist_ok=True, parents=True)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-LOG_FILE_PATH = "./log/train_log.txt"
+LOG_FILE_PATH = "./b_log/train_log.txt"
 
 # Data Loader
 train_loader = DataLoader(StainingDataset(DATA_ROOT), batch_size=4, shuffle=True)
@@ -28,7 +28,7 @@ criterion_l1 = nn.L1Loss()
 # --- CƠ CHẾ RESUME TRAINING (TỰ ĐỘNG TRAIN TIẾP) ---
 start_epoch = 0
 # Chỉ định file checkpoint mới nhất bạn đang có (ở đây là gen_1.pth)
-RESUME_CHECKPOINT = CHECKPOINT_DIR / "gen_3.pth" 
+RESUME_CHECKPOINT = CHECKPOINT_DIR / "gen_6.pth" 
 
 if RESUME_CHECKPOINT.exists():
     print(f"\n[RESUME] Tìm thấy file checkpoint cũ: {RESUME_CHECKPOINT.name}. Đang nạp dữ liệu...")
@@ -59,7 +59,7 @@ else:
 
 # Training loop
 # Thay đổi cấu trúc lặp để bắt đầu từ start_epoch thay vì mặc định bằng 0
-for epoch in range(start_epoch, 5):
+for epoch in range(start_epoch, 10):
     gen.train()
     for i, (real_in, real_out) in enumerate(train_loader):
         real_in, real_out = real_in.to(device), real_out.to(device)

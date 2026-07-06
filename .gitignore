@@ -5,18 +5,17 @@ dataset/
 
 
 logs/
-log/
-evaluation_results/
-evaluation_resultsingle/
+b_log/
+m_log/
+b_evaluation_results/
+b_evaluation_resultsingle/
+m_evaluation_results/
+m_evaluation_resultsingle/
 ggtest/
 *.txt
-train.log.txt
-
 
 __pycache__/
-.ipynb_checkpoints/
 .env
-.DS_Store
 
 
 tree.py
