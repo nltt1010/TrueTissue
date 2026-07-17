@@ -25,11 +25,11 @@ LIST_CHECKPOINTS = [
     "gen_0.pth",
     "gen_1.pth",
     "gen_2.pth",
-    # "gen_3.pth",
-    # "gen_4.pth",
-    # "gen_5.pth",
+    "gen_3.pth",
+    "gen_4.pth",
+    "gen_5.pth",
     # "gen_6.pth",
-    "gen_last.pth"  
+    # "gen_last.pth"  
 ]
 
 MAX_TEST_IMAGES = 50
@@ -157,7 +157,7 @@ def main_evaluation():
     summary_total_path = LOG_DIR / "eval_summary_total.txt"
     with open(summary_total_path, "w", encoding="utf-8") as f_sum:
         f_sum.write("=" * 75 + "\n")
-        f_sum.write(" BẢNG TỔNG HỢP VÀ SO SÁNH CHỈ SỐ GIỮA CÁC MODEL NÂNG CẤP (MY_MODEL) ".center(75, " ") + "\n")
+        f_sum.write(" BẢNG TỔNG HỢP VÀ SO SÁNH CHỈ SỐ MY MODEL ".center(75, " ") + "\n")
         f_sum.write("=" * 75 + "\n")
         f_sum.write(f"{'TÊN MODEL':<15}\t{'PSNR (↑)':<12}\t{'SSIM (↑)':<12}\t{'FID (↓)':<12}\t{'LPIPS (↓)':<12}\n")
         f_sum.write("-" * 75 + "\n")

@@ -142,7 +142,7 @@ def main_evaluation():
     summary_total_path = LOG_DIR / "eval_summary_total.txt"
     with open(summary_total_path, "w", encoding="utf-8") as f_sum:
         f_sum.write("=" * 75 + "\n")
-        f_sum.write(" BẢNG TỔNG HỢP VÀ SO SÁNH CHỈ SỐ GIỮA CÁC MODEL (TEST NHANH) ".center(75, " ") + "\n")
+        f_sum.write(" BẢNG TỔNG HỢP VÀ SO SÁNH CHỈ SỐ BASEMODEL ".center(75, " ") + "\n")
         f_sum.write("=" * 75 + "\n")
         f_sum.write(f"{'TÊN MODEL':<15}\t{'PSNR (↑)':<12}\t{'SSIM (↑)':<12}\t{'FID (↓)':<12}\t{'LPIPS (↓)':<12}\n")
         f_sum.write("-" * 75 + "\n")
