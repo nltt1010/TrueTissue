@@ -1,0 +1,165 @@
+{% extends "layout.html" %}
+
+{% block title %}TrueTissue | AI Pathology Diagnostic Workspace{% endblock %}
+
+{% block content %}
+<div class="section-header">
+    <h1 class="section-title"><span>🔬</span> Diagnostic & Staining Workspace</h1>
+    <p class="section-subtitle">Real-time virtual histology staining, ResNet18 abnormality detection, and Grad-CAM tumor circling with 4x razor-sharp enhancement.</p>
+</div>
+
+<div class="workspace-grid">
+    <!-- Left Sidebar Control Panel -->
+    <aside class="glass-card glow-border control-panel">
+        <form id="analyze-form" enctype="multipart/form-data">
+            <div class="panel-section">
+                <label class="panel-label"><span>📁</span> 1. Tissue Sample Source</label>
+                
+                <!-- Clean Dropzone for custom upload -->
+                <div id="dropzone" class="dropzone">
+                    <input type="file" id="file-input" name="file" accept=".png,.jpg,.jpeg,.tif,.tiff,.bmp" style="display: none;">
+                    <div class="dropzone-icon">☁️</div>
+                    <div class="dropzone-text">Drag & Drop Image Here</div>
+                    <div class="dropzone-hint">Supports PNG, JPG, TIF, BMP (Grayscale or Color)</div>
+                </div>
+
+                <!-- Preview of uploaded file -->
+                <div id="file-preview" class="file-preview">
+                    <img id="file-thumb" src="" alt="Thumbnail">
+                    <div class="file-info">
+                        <div id="file-name" class="file-name">filename.png</div>
+                        <div id="file-size" class="file-size">0.0 KB</div>
+                    </div>
+                    <button type="button" id="remove-file" class="remove-file" title="Remove File">✕</button>
+                </div>
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 1.25rem 0;">
+
+            <div class="panel-section">
+                <label class="panel-label"><span>⚙️</span> 2. Staining Architecture</label>
+                <div class="radio-cards">
+                    <label class="radio-card">
+                        <input type="radio" name="model_type" value="mymodel" checked>
+                        <div class="radio-content mymodel-box">
+                            <span class="model-name">✨ My Model</span>
+                            <span class="model-desc">Attention Gate + PixelShuffle</span>
+                        </div>
+                    </label>
+                    <label class="radio-card">
+                        <input type="radio" name="model_type" value="basemodel">
+                        <div class="radio-content basemodel-box">
+                            <span class="model-name">🔷 Base Model</span>
+                            <span class="model-desc">Standard UNet Generator</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <div class="panel-section" style="margin-top: 1.25rem;">
+                <label class="panel-label"><span>🧠</span> 3. Model Checkpoints</label>
+                
+                <div style="margin-bottom: 0.75rem;">
+                    <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Stain Generator Checkpoint:</label>
+                    <select id="stain_ckpt" name="stain_ckpt" class="form-select" data-default-text="Auto-Select Best Checkpoint">
+                        <option value="">Auto-Select Best Checkpoint</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">ResNet18 Classifier Checkpoint:</label>
+                    <select id="cls_ckpt" name="cls_ckpt" class="form-select" data-default-text="Auto-Select Best Classifier (cls_best.pth)">
+                        <option value="">Auto-Select Best Classifier (cls_best.pth)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="margin-top: 2rem;">
+                <button type="submit" id="submit-btn" class="btn btn-primary btn-full" disabled>
+                    <span>🚀</span> Execute AI Analysis Pipeline
+                </button>
+            </div>
+        </form>
+    </aside>
+
+    <!-- Right Workspace Display Area (Large Direct Display / No Sliding required) -->
+    <section class="results-area">
+        <!-- Placeholder Empty State -->
+        <div id="placeholder-state" class="placeholder-state">
+            <div class="placeholder-icon">🦠</div>
+            <h2 class="placeholder-title">Awaiting Histology Sample</h2>
+            <p style="color: var(--text-muted); max-width: 400px; margin: 0 auto;">
+                Upload a tissue sample image on the left to initiate real-time virtual staining and razor-sharp abnormality localization.
+            </p>
+        </div>
+
+        <!-- Dynamic Results Workspace (Hidden initially) -->
+        <div id="results-content" style="display: none; flex-direction: column; gap: 2rem;">
+            <!-- 1. Diagnostic Banner Badge Card -->
+            <div id="diag-banner" class="diag-banner status-normal">
+                <div class="diag-left">
+                    <div id="diag-icon-el" class="diag-icon">✅</div>
+                    <div>
+                        <div class="diag-title">ResNet18 Abnormality Prediction</div>
+                        <div id="diag-result-text" class="diag-result">Normal (Healthy)</div>
+                    </div>
+                </div>
+                
+                <div class="diag-metrics">
+                    <div class="metric-item">
+                        <div class="metric-label">Tumor Prob.</div>
+                        <div id="val-tumor" class="metric-val">0.0%</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-label">Normal Prob.</div>
+                        <div id="val-normal" class="metric-val">100.0%</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-label">Circled Regions</div>
+                        <div id="val-regions" class="metric-val">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Large Direct Display Grid (1024x1024 Ultra-Sharp Images directly on screen) -->
+            <div class="large-display-grid">
+                <!-- Large Card 1: 4x Ultra-Sharp Stained Tissue -->
+                <div class="large-image-card">
+                    <div class="image-header">
+                        <span class="image-title"><span>🎨</span> 4x Ultra-Sharp Stained Tissue</span>
+                        <span id="badge-model-used" class="step-badge" style="background: var(--grad-mymodel); color: white;">MYMODEL (1024x1024)</span>
+                    </div>
+                    <div class="large-image-container">
+                        <img id="img-stain-large" src="" alt="4x Ultra-Sharp Stained Tissue">
+                    </div>
+                </div>
+
+                <!-- Large Card 2: 4x Ultra-Sharp Abnormality Map & Circling -->
+                <div class="large-image-card">
+                    <div class="image-header">
+                        <span class="image-title"><span>⭕</span> 4x Abnormality Map & Circling</span>
+                        <span class="step-badge" style="background: var(--grad-abnormal); color: white;">KHOANH BỆNH SẮC NÉT (1024x1024)</span>
+                    </div>
+                    <div class="large-image-container">
+                        <img id="img-cam-large" src="" alt="4x Ultra-Sharp Abnormality Map">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Reference Card: Original Grayscale Input -->
+            <div class="glass-card" style="padding: 1.25rem;">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <img id="img-gray" src="" alt="Original Input" style="width: 72px; height: 72px; object-fit: cover; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                        <div>
+                            <h4 style="font-family: var(--font-heading); font-size: 1rem; font-weight: 700; color: var(--text-primary);">Original Grayscale Input Reference</h4>
+                            <p style="font-size: 0.8rem; color: var(--text-secondary);">Input resolution: 256x256 | Processed through virtual staining neural network</p>
+                        </div>
+                    </div>
+                    <span class="step-badge" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">Grayscale Ground</span>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

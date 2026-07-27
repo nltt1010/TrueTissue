@@ -5,8 +5,8 @@ dataset/
 
 
 logs/
-b_log/
-m_log/
+b_log_vstain/
+m_log_vstain/
 b_evaluation_results/
 b_evaluation_resultsingle/
 m_evaluation_results/

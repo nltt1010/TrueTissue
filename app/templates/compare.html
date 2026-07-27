@@ -1,0 +1,205 @@
+{% extends "layout.html" %}
+
+{% block title %}TrueTissue | Multi-Model Comparison Suite{% endblock %}
+
+{% block content %}
+<div class="section-header">
+    <h1 class="section-title"><span>⚖️</span> Model & Pipeline Comparison Suite</h1>
+    <p class="section-subtitle">Simultaneously evaluate Base Model vs My Model virtual staining fidelity, classification accuracy, and razor-sharp Grad-CAM tumor bounding side-by-side.</p>
+</div>
+
+<div class="compare-grid">
+    <!-- Left Sidebar Control Panel -->
+    <aside class="glass-card glow-border control-panel">
+        <form id="compare-form" enctype="multipart/form-data">
+            <div class="panel-section">
+                <label class="panel-label"><span>📁</span> 1. Tissue Sample Source</label>
+                
+                <div id="dropzone" class="dropzone">
+                    <input type="file" id="file-input" name="file" accept=".png,.jpg,.jpeg,.tif,.tiff,.bmp" style="display: none;">
+                    <div class="dropzone-icon">⚖️</div>
+                    <div class="dropzone-text">Drag & Drop Image Here</div>
+                    <div class="dropzone-hint">Supports PNG, JPG, TIF, BMP (Grayscale or Color)</div>
+                </div>
+
+                <div id="file-preview" class="file-preview">
+                    <img id="file-thumb" src="" alt="Thumbnail">
+                    <div class="file-info">
+                        <div id="file-name" class="file-name">filename.png</div>
+                        <div id="file-size" class="file-size">0.0 KB</div>
+                    </div>
+                    <button type="button" id="remove-file" class="remove-file" title="Remove File">✕</button>
+                </div>
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 1.25rem 0;">
+
+            <div class="panel-section">
+                <label class="panel-label"><span>🧠</span> 2. Checkpoint Selection</label>
+                
+                <div style="margin-bottom: 0.75rem;">
+                    <label style="font-size: 0.75rem; color: var(--accent-indigo); font-weight: 600; display: block; margin-bottom: 0.25rem;">🔷 Base Model Checkpoint:</label>
+                    <select id="stain_ckpt_base" name="stain_ckpt_base" class="form-select" data-default-text="Auto-Select Best Base Checkpoint">
+                        <option value="">Auto-Select Best Base Checkpoint</option>
+                    </select>
+                </div>
+
+                <div style="margin-bottom: 0.75rem;">
+                    <label style="font-size: 0.75rem; color: var(--accent-emerald); font-weight: 600; display: block; margin-bottom: 0.25rem;">✨ My Model Checkpoint:</label>
+                    <select id="stain_ckpt_my" name="stain_ckpt_my" class="form-select" data-default-text="Auto-Select Best MyModel Checkpoint">
+                        <option value="">Auto-Select Best MyModel Checkpoint</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Shared Classifier Checkpoint:</label>
+                    <select id="cls_ckpt" name="cls_ckpt" class="form-select" data-default-text="Auto-Select Best Classifier">
+                        <option value="">Auto-Select Best Classifier</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="margin-top: 2rem;">
+                <button type="submit" id="submit-btn" class="btn btn-primary btn-full" disabled>
+                    <span>⚖️</span> Run Simultaneous Comparison
+                </button>
+            </div>
+        </form>
+    </aside>
+
+    <!-- Right Comparison Results Workspace (Large Direct Side-by-Side Display) -->
+    <section class="results-area">
+        <!-- Placeholder State -->
+        <div id="placeholder-state" class="placeholder-state">
+            <div class="placeholder-icon">🔄</div>
+            <h2 class="placeholder-title">Ready for Multi-Model Evaluation</h2>
+            <p style="color: var(--text-muted); max-width: 450px; margin: 0 auto;">
+                Upload a test tissue sample on the left to simultaneously run both virtual staining architectures and view their ultra-sharp results side-by-side.
+            </p>
+        </div>
+
+        <!-- Dynamic Results Content -->
+        <div id="compare-results-content" style="display: none; flex-direction: column; gap: 2.5rem;">
+            
+            <!-- Side-by-Side Model Diagnostics Columns (No Slider / Direct Large View) -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem; align-items: start;">
+                
+                <!-- COLUMN 1: BASE MODEL -->
+                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; background: rgba(139, 92, 246, 0.15); border: 1px solid rgba(139, 92, 246, 0.4); border-radius: var(--radius-md);">
+                        <span style="font-size: 1.5rem;">🔷</span>
+                        <div>
+                            <h4 style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #ddd6fe;">Base Model Architecture</h4>
+                            <span style="font-size: 0.75rem; color: var(--text-secondary);">Standard UNet Deconvolution (4x Sharp)</span>
+                        </div>
+                    </div>
+
+                    <!-- Base Banner -->
+                    <div id="diag-banner-base" class="diag-banner status-normal" style="padding: 1.25rem;">
+                        <div class="diag-left">
+                            <div id="diag-icon-base" class="diag-icon" style="width: 44px; height: 44px; font-size: 1.25rem;">✅</div>
+                            <div>
+                                <div class="diag-title" style="font-size: 0.75rem;">Prediction</div>
+                                <div id="diag-text-base" class="diag-result" style="font-size: 1.35rem;">Normal</div>
+                            </div>
+                        </div>
+                        
+                        <div class="diag-metrics" style="gap: 1rem;">
+                            <div class="metric-item">
+                                <div class="metric-label">Tumor %</div>
+                                <div id="val-tumor-base" class="metric-val" style="font-size: 1.1rem;">0.0%</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-label">Circled</div>
+                                <div id="val-regions-base" class="metric-val" style="font-size: 1.1rem;">0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Base Large Stained Image (Direct 1024x1024 View) -->
+                    <div class="large-image-card">
+                        <div class="image-header">
+                            <span class="image-title">🎨 Base Stained (4x Ultra-Sharp)</span>
+                            <span id="badge-ckpt-base" class="step-badge" style="background: rgba(139, 92, 246, 0.3); color: #ddd6fe;">gen_6.pth</span>
+                        </div>
+                        <div class="large-image-container">
+                            <img id="img-stain-base-large" src="" alt="Base 4x Stained">
+                        </div>
+                    </div>
+
+                    <!-- Base Large CAM Circled (Direct 1024x1024 View) -->
+                    <div class="large-image-card">
+                        <div class="image-header">
+                            <span class="image-title">⭕ Base Abnormality Map (4x Sharp)</span>
+                            <span class="step-badge" style="background: rgba(244, 63, 94, 0.2); color: #fda4af;">Khoanh Bệnh</span>
+                        </div>
+                        <div class="large-image-container">
+                            <img id="img-cam-base-large" src="" alt="Base 4x Abnormality Map">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- COLUMN 2: MY MODEL -->
+                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: var(--radius-md);">
+                        <span style="font-size: 1.5rem;">✨</span>
+                        <div>
+                            <h4 style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #a7f3d0;">My Model Architecture</h4>
+                            <span style="font-size: 0.75rem; color: var(--text-secondary);">Attention Gate + PixelShuffle (4x Sharp)</span>
+                        </div>
+                    </div>
+
+                    <!-- My Model Banner -->
+                    <div id="diag-banner-my" class="diag-banner status-normal" style="padding: 1.25rem;">
+                        <div class="diag-left">
+                            <div id="diag-icon-my" class="diag-icon" style="width: 44px; height: 44px; font-size: 1.25rem;">✅</div>
+                            <div>
+                                <div class="diag-title" style="font-size: 0.75rem;">Prediction</div>
+                                <div id="diag-text-my" class="diag-result" style="font-size: 1.35rem;">Normal</div>
+                            </div>
+                        </div>
+                        
+                        <div class="diag-metrics" style="gap: 1rem;">
+                            <div class="metric-item">
+                                <div class="metric-label">Tumor %</div>
+                                <div id="val-tumor-my" class="metric-val" style="font-size: 1.1rem;">0.0%</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-label">Circled</div>
+                                <div id="val-regions-my" class="metric-val" style="font-size: 1.1rem;">0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- My Model Large Stained Image (Direct 1024x1024 View) -->
+                    <div class="large-image-card">
+                        <div class="image-header">
+                            <span class="image-title">🎨 MyModel Stained (4x Ultra-Sharp)</span>
+                            <span id="badge-ckpt-my" class="step-badge" style="background: rgba(16, 185, 129, 0.3); color: #a7f3d0;">gen_8.pth</span>
+                        </div>
+                        <div class="large-image-container">
+                            <img id="img-stain-my-large" src="" alt="MyModel 4x Stained">
+                        </div>
+                    </div>
+
+                    <!-- My Model Large CAM Circled (Direct 1024x1024 View) -->
+                    <div class="large-image-card">
+                        <div class="image-header">
+                            <span class="image-title">⭕ MyModel Abnormality Map (4x Sharp)</span>
+                            <span class="step-badge" style="background: rgba(244, 63, 94, 0.2); color: #fda4af;">Khoanh Bệnh</span>
+                        </div>
+                        <div class="large-image-container">
+                            <img id="img-cam-my-large" src="" alt="MyModel 4x Abnormality Map">
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/compare.js') }}"></script>
+{% endblock %}

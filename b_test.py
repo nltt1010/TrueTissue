@@ -15,7 +15,7 @@ TEST_DATA_ROOT = Path(r"G:/CV/pj/dataset/test")
 CHECKPOINT_DIR = Path(r"G:/CV/pj/b_checkpoints")
 BASE_OUTPUT_DIR = Path(r"G:/CV/pj/b_evaluation_results")
 
-LOG_DIR = Path("./log")
+LOG_DIR = Path("./b_log_vstain")
 
 # =====================================================================
 LIST_CHECKPOINTS = [
@@ -25,10 +25,13 @@ LIST_CHECKPOINTS = [
     "gen_3.pth",
     "gen_4.pth",
     "gen_5.pth",
-    "gen_6.pth"
+    "gen_6.pth",
+    "gen_7.pth",
+    "gen_8.pth",
+    "gen_9.pth",
 ]
 
-MAX_TEST_IMAGES = 50
+MAX_TEST_IMAGES = 100
 # =====================================================================
 
 # Đảm bảo các thư mục tồn tại an toàn trước khi ghi file

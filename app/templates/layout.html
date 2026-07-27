@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}TrueTissue | Clinical Pathology AI Suite{% endblock %}</title>
+    <meta name="description" content="State-of-the-art AI diagnostic platform for virtual histology staining, tumor abnormality prediction, and cellular sharpness upscaling.">
+    <!-- Custom Design System CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block head %}{% endblock %}
+</head>
+<body>
+
+    <!-- Top Navigation Bar -->
+    <header class="navbar">
+        <a href="{{ url_for('index') }}" class="brand">
+            <div class="brand-icon">🧬</div>
+            <div>
+                <div class="brand-text">TrueTissue AI</div>
+                <div class="brand-sub">Clinical Pathology Suite</div>
+            </div>
+        </a>
+        
+        <nav class="nav-links">
+            <a href="{{ url_for('index') }}" class="nav-item {% if active_page == 'analyze' %}active{% endif %}">
+                <span>🔬</span> Diagnostic Workspace
+            </a>
+            <a href="{{ url_for('compare') }}" class="nav-item {% if active_page == 'compare' %}active{% endif %}">
+                <span>⚖️</span> Model Comparison Suite
+            </a>
+        </nav>
+    </header>
+
+    <!-- Main Content Body -->
+    <main class="main-container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Global Full-screen Loader Overlay -->
+    <div id="loader-overlay" class="loader-overlay">
+        <div class="spinner"></div>
+        <div id="loader-text" class="loader-text">AI Pipeline Processing...</div>
+        <div id="loader-sub" class="loader-sub">Executing deep neural networks on tissue sample</div>
+    </div>
+
+    <!-- Global Full-screen Zoom Lightbox Modal -->
+    <div id="lightbox" class="lightbox">
+        <div class="lightbox-content">
+            <div class="lightbox-header">
+                <span id="lightbox-title" class="lightbox-title">Tissue Observation</span>
+                <button id="lightbox-close" class="lightbox-close" title="Close Lightbox (Esc)">✕</button>
+            </div>
+            <div class="lightbox-img-wrapper">
+                <img id="lightbox-img" class="lightbox-img" src="" alt="Zoomed Tissue Observation">
+            </div>
+        </div>
+    </div>
+
+    <!-- Core Javascript Scripts -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
