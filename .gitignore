@@ -13,7 +13,8 @@ m_evaluation_results/
 m_evaluation_resultsingle/
 ggtest/
 *.txt
-
+app/static/outputs
+app/static/uploads
 __pycache__/
 .env
 

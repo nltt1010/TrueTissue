@@ -95,6 +95,15 @@
 
         <!-- Dynamic Results Workspace (Hidden initially) -->
         <div id="results-content" style="display: none; flex-direction: column; gap: 2rem;">
+            
+            <!-- Slice Gallery (For large images cut into N x M patches) -->
+            <div id="slice-gallery-container" style="display: none;">
+                <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem; color: var(--text-primary);">📍 Lưới các phần ảnh (Click để xem chi tiết)</h3>
+                <div id="slice-gallery" style="display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 0.5rem;">
+                    <!-- Thumbnails will be injected here -->
+                </div>
+            </div>
+
             <!-- 1. Diagnostic Banner Badge Card -->
             <div id="diag-banner" class="diag-banner status-normal">
                 <div class="diag-left">

@@ -289,7 +289,7 @@ class TissueAnalyzer:
         
         # Draw bounding circles ("khoanh tròn lại") around abnormal regions
         num_circles = 0
-        if prob_tumor > 0.35 or cam_resized.max() > 0.5:
+        if is_abnormal:
             # Threshold heatmap to isolate abnormal clusters
             thresh_val = max(0.4, cam_resized.max() * 0.55)
             thresh = np.uint8((cam_resized > thresh_val) * 255)
@@ -428,6 +428,13 @@ class TissueAnalyzer:
         """
         Runs simultaneous analysis on BOTH Base Model and My Model for direct side-by-side comparison.
         """
+        import uuid
+        run_id = str(uuid.uuid4())[:8]
+        if output_dir is None:
+            output_dir = self.root_dir / "app" / "static" / "outputs"
+        output_dir = Path(output_dir)
+        output_dir.mkdir(exist_ok=True, parents=True)
+
         res_base = self.run_full_analysis(img_input, "basemodel", stain_ckpt_base, cls_ckpt, output_dir)
         res_my = self.run_full_analysis(img_input, "mymodel", stain_ckpt_my, cls_ckpt, output_dir)
         
@@ -435,3 +442,65 @@ class TissueAnalyzer:
             "basemodel": res_base,
             "mymodel": res_my
         }
+
+    def run_sliced_analysis(self, img_input, model_type="mymodel", stain_ckpt=None, cls_ckpt=None, output_dir=None):
+        import math
+        if isinstance(img_input, (str, Path)):
+            img = cv2.imread(str(img_input))
+        else:
+            img = img_input.copy()
+            
+        H, W = img.shape[:2]
+        # Only skip slicing if the image is exactly or smaller than 256x256
+        if H <= 256 and W <= 256:
+            return [self.run_full_analysis(img, model_type, stain_ckpt, cls_ckpt, output_dir)]
+            
+        N = max(1, math.ceil(H / 256))
+        M = max(1, math.ceil(W / 256))
+        step_h = H // N
+        step_w = W // M
+        
+        results = []
+        for i in range(N):
+            for j in range(M):
+                y_start = i * step_h
+                y_end = H if i == N - 1 else (i + 1) * step_h
+                x_start = j * step_w
+                x_end = W if j == M - 1 else (j + 1) * step_w
+                
+                patch = img[y_start:y_end, x_start:x_end]
+                patch_res = self.run_full_analysis(patch, model_type, stain_ckpt, cls_ckpt, output_dir)
+                patch_res['patch_info'] = {'row': i, 'col': j, 'total_rows': N, 'total_cols': M, 'is_slice': True}
+                results.append(patch_res)
+        return results
+
+    def run_sliced_comparison(self, img_input, stain_ckpt_base=None, stain_ckpt_my=None, cls_ckpt=None, output_dir=None):
+        import math
+        if isinstance(img_input, (str, Path)):
+            img = cv2.imread(str(img_input))
+        else:
+            img = img_input.copy()
+            
+        H, W = img.shape[:2]
+        # Only skip slicing if the image is exactly or smaller than 256x256
+        if H <= 256 and W <= 256:
+            return [self.run_comparison(img, stain_ckpt_base, stain_ckpt_my, cls_ckpt, output_dir)]
+            
+        N = max(1, math.ceil(H / 256))
+        M = max(1, math.ceil(W / 256))
+        step_h = H // N
+        step_w = W // M
+        
+        results = []
+        for i in range(N):
+            for j in range(M):
+                y_start = i * step_h
+                y_end = H if i == N - 1 else (i + 1) * step_h
+                x_start = j * step_w
+                x_end = W if j == M - 1 else (j + 1) * step_w
+                
+                patch = img[y_start:y_end, x_start:x_end]
+                patch_res = self.run_comparison(patch, stain_ckpt_base, stain_ckpt_my, cls_ckpt, output_dir)
+                patch_res['patch_info'] = {'row': i, 'col': j, 'total_rows': N, 'total_cols': M, 'is_slice': True}
+                results.append(patch_res)
+        return results

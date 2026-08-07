@@ -81,6 +81,14 @@
         <!-- Dynamic Results Content -->
         <div id="compare-results-content" style="display: none; flex-direction: column; gap: 2.5rem;">
             
+            <!-- Slice Gallery (For large images cut into N x M patches) -->
+            <div id="compare-slice-gallery-container" style="display: none;">
+                <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem; color: var(--text-primary);">📍 Lưới các phần ảnh (Click để xem chi tiết)</h3>
+                <div id="compare-slice-gallery" style="display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 0.5rem;">
+                    <!-- Thumbnails will be injected here -->
+                </div>
+            </div>
+
             <!-- Side-by-Side Model Diagnostics Columns (No Slider / Direct Large View) -->
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem; align-items: start;">
                 

@@ -84,7 +84,7 @@ def analyze():
         stain_ckpt = request.form.get("stain_ckpt") or None
         cls_ckpt = request.form.get("cls_ckpt") or None
         
-        results = analyzer.run_full_analysis(
+        results = analyzer.run_sliced_analysis(
             img_input=image_path,
             model_type=model_type,
             stain_ckpt=stain_ckpt,
@@ -110,7 +110,7 @@ def compare_models():
         stain_ckpt_my = request.form.get("stain_ckpt_my") or None
         cls_ckpt = request.form.get("cls_ckpt") or None
         
-        comparison_results = analyzer.run_comparison(
+        comparison_results = analyzer.run_sliced_comparison(
             img_input=image_path,
             stain_ckpt_base=stain_ckpt_base,
             stain_ckpt_my=stain_ckpt_my,

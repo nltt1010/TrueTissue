@@ -180,12 +180,67 @@ function initAnalyzeWorkspace() {
 /**
  * Renders Single Model Analysis Results directly into Dashboard UI in large full-size dimensions
  */
-function renderSingleResults(data) {
+function renderSingleResults(dataArray) {
+    if (!Array.isArray(dataArray) || dataArray.length === 0) return;
+
     const placeholder = document.getElementById("placeholder-state");
     const resultsArea = document.getElementById("results-content");
     if (placeholder) placeholder.style.display = "none";
     if (resultsArea) resultsArea.style.display = "flex";
 
+    const galleryContainer = document.getElementById("slice-gallery-container");
+    const gallery = document.getElementById("slice-gallery");
+    
+    if (dataArray.length > 1) {
+        galleryContainer.style.display = "block";
+        gallery.innerHTML = "";
+        
+        // Format gallery as a real 2D grid matching the sliced image
+        const totalCols = dataArray[0].patch_info.total_cols;
+        gallery.style.display = "grid";
+        gallery.style.gridTemplateColumns = `repeat(${totalCols}, max-content)`;
+        gallery.style.gap = "4px";
+        gallery.style.justifyContent = "center";
+        gallery.style.margin = "0 auto";
+        
+        dataArray.forEach((slice, idx) => {
+            const thumb = document.createElement("img");
+            thumb.src = slice.images.grayscale;
+            thumb.style.width = "80px";
+            thumb.style.height = "80px";
+            thumb.style.objectFit = "cover";
+            thumb.style.borderRadius = "4px";
+            thumb.style.cursor = "pointer";
+            thumb.style.border = idx === 0 ? "3px solid var(--accent-cyan)" : "3px solid transparent";
+            
+            // Highlight color if abnormal
+            if (slice.prediction.is_abnormal) {
+                thumb.style.boxShadow = "0 0 10px rgba(255, 60, 60, 0.9)";
+            }
+
+            thumb.title = `Patch [Row ${slice.patch_info.row}, Col ${slice.patch_info.col}] - ${slice.prediction.prediction}`;
+
+            thumb.addEventListener("click", () => {
+                // Update borders
+                Array.from(gallery.children).forEach(c => c.style.border = "3px solid transparent");
+                thumb.style.border = "3px solid var(--accent-cyan)";
+                renderViewForSlice(slice);
+            });
+
+            gallery.appendChild(thumb);
+        });
+    } else {
+        galleryContainer.style.display = "none";
+    }
+
+    // Render the first slice by default
+    renderViewForSlice(dataArray[0]);
+
+    // Scroll smoothly to results
+    resultsArea.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function renderViewForSlice(data) {
     // 1. Diagnostic Banner
     const banner = document.getElementById("diag-banner");
     const diagIcon = document.getElementById("diag-icon-el");
@@ -194,6 +249,8 @@ function renderSingleResults(data) {
     const probNormal = document.getElementById("val-normal");
     const regCount = document.getElementById("val-regions");
 
+    let locationText = data.patch_info && data.patch_info.is_slice ? ` (Patch ${data.patch_info.row}, ${data.patch_info.col})` : '';
+
     if (banner) {
         banner.className = `diag-banner ${data.prediction.is_abnormal ? 'status-tumor' : 'status-normal'}`;
     }
@@ -201,7 +258,7 @@ function renderSingleResults(data) {
         diagIcon.innerHTML = data.prediction.is_abnormal ? '⚠️' : '✅';
     }
     if (diagText) {
-        diagText.textContent = data.prediction.prediction;
+        diagText.textContent = data.prediction.prediction + locationText;
     }
     if (probTumor) probTumor.textContent = `${data.prediction.prob_tumor}%`;
     if (probNormal) probNormal.textContent = `${data.prediction.prob_normal}%`;
@@ -217,9 +274,8 @@ function renderSingleResults(data) {
     if (imgCamLarge) imgCamLarge.src = data.images.upscaled_cam;
     if (imgGray) imgGray.src = data.images.grayscale;
     if (badgeModel) badgeModel.textContent = `${data.model_used.toUpperCase()} (1024x1024)`;
-
-    // Scroll smoothly to results
-    resultsArea.scrollIntoView({ behavior: "smooth", block: "start" });
+    
+    // Note: Inline zoom/pan removed, now using Lightbox Modal on click
 }
 
 /**
@@ -229,25 +285,121 @@ function initLightbox() {
     const lightbox = document.getElementById("lightbox");
     const closeBtn = document.getElementById("lightbox-close");
     const img = document.getElementById("lightbox-img");
+    const wrapper = document.querySelector(".lightbox-img-wrapper");
 
-    if (!lightbox || !img) return;
+    if (!lightbox || !img || !wrapper) return;
+
+    // Strict styling for predictable math
+    wrapper.style.overflow = "hidden";
+    wrapper.style.position = "relative";
+    
+    img.style.transition = "none";
+    img.style.transformOrigin = "0 0";
+    img.style.width = "100%";
+    img.style.height = "100%";
+    img.style.objectFit = "contain";
+
+    let scale = 1;
+    let pointX = 0;
+    let pointY = 0;
+    let startX = 0;
+    let startY = 0;
+    let isDragging = false;
+
+    function setTransform() {
+        img.style.transform = `translate(${pointX}px, ${pointY}px) scale(${scale})`;
+    }
+
+    function resetZoom() {
+        scale = 1;
+        pointX = 0;
+        pointY = 0;
+        setTransform();
+    }
+
+    function closeLightbox() {
+        lightbox.classList.remove("active");
+        resetZoom();
+    }
 
     if (closeBtn) {
-        closeBtn.addEventListener("click", () => {
-            lightbox.classList.remove("active");
-            img.classList.remove("zoomed");
-        });
+        closeBtn.addEventListener("click", closeLightbox);
     }
 
     lightbox.addEventListener("click", (e) => {
         if (e.target === lightbox || e.target.classList.contains("lightbox-img-wrapper")) {
-            lightbox.classList.remove("active");
-            img.classList.remove("zoomed");
+            closeLightbox();
         }
     });
 
-    img.addEventListener("click", () => {
-        img.classList.toggle("zoomed");
+    // Zoom on wheel (Wrapper acts as the stable viewport)
+    wrapper.addEventListener("wheel", (e) => {
+        e.preventDefault();
+        
+        const rect = wrapper.getBoundingClientRect();
+        
+        // Mouse coordinate relative to the stable wrapper (viewport)
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+        
+        // Zoom factor
+        const delta = e.deltaY > 0 ? 0.85 : 1.15;
+        const newScale = Math.max(1, Math.min(scale * delta, 25)); // Cap 1x -> 25x
+        
+        if (newScale === 1) {
+            resetZoom();
+        } else {
+            // imageX/Y is the coordinate inside the unscaled image under the mouse
+            const imageX = (mouseX - pointX) / scale;
+            const imageY = (mouseY - pointY) / scale;
+            
+            // Adjust pointX/Y so that imageX/Y stays exactly under mouseX/Y
+            pointX = mouseX - imageX * newScale;
+            pointY = mouseY - imageY * newScale;
+            
+            scale = newScale;
+            setTransform();
+        }
+    });
+
+    // Pan on drag
+    wrapper.addEventListener("mousedown", (e) => {
+        e.preventDefault(); // Prevent native HTML image ghost drag
+        if (scale > 1) {
+            isDragging = true;
+            startX = e.clientX - pointX;
+            startY = e.clientY - pointY;
+            wrapper.style.cursor = "grabbing";
+        }
+    });
+
+    window.addEventListener("mousemove", (e) => {
+        if (!isDragging) return;
+        e.preventDefault();
+        pointX = e.clientX - startX;
+        pointY = e.clientY - startY;
+        setTransform();
+    });
+
+    window.addEventListener("mouseup", () => {
+        isDragging = false;
+        wrapper.style.cursor = "default";
+    });
+
+    // Bind click events on all large images to open Lightbox
+    document.querySelectorAll('.large-image-container img').forEach(displayImg => {
+        displayImg.style.cursor = 'zoom-in';
+        displayImg.addEventListener('click', (e) => {
+            const container = e.target.closest('.large-image-card');
+            let title = "Detailed Tissue Observation";
+            if (container) {
+                const titleEl = container.querySelector('.image-title');
+                if (titleEl) title = titleEl.textContent.trim();
+            }
+            
+            resetZoom();
+            openLightbox(e.target.src, title);
+        });
     });
 }
 
