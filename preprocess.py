@@ -8,17 +8,14 @@ class DatasetProcessor:
         self.dataset_root = Path(dataset_root)
         
     def generate_grayscale(self):
-        # Duyệt qua train và test
         for split in ['train', 'test']:
             split_path = self.dataset_root / split
             if not split_path.exists(): continue
             
-            # Duyệt qua normal và tumor
             for cat in ['normal', 'tumor']:
                 cat_path = split_path / cat
                 if not cat_path.exists(): continue
                 
-                # Duyệt qua từng loại tissue
                 for tissue_dir in cat_path.iterdir():
                     if tissue_dir.is_dir() and not tissue_dir.name.endswith('_grayscale'):
                         self._process_tissue(tissue_dir)
@@ -39,8 +36,7 @@ class DatasetProcessor:
                     cv2.imwrite(str(dest_path), gray_img)
 
 if __name__ == "__main__":
-    # Thay đổi đường dẫn đến thư mục dataset của bạn
-    DATASET_PATH = r"G:\CV\pj\dataset"
+    DATASET_PATH = Path(__file__).resolve().parent / "dataset"
     processor = DatasetProcessor(DATASET_PATH)
     processor.generate_grayscale()
     print("Hoàn tất tạo ảnh Grayscale cho toàn bộ dataset.")

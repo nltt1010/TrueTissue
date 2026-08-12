@@ -12,14 +12,11 @@ from torchmetrics.image.fid import FrechetInceptionDistance
 from torchmetrics.image.lpip import LearnedPerceptualImagePatchSimilarity
 
 
-TEST_DATA_ROOT = Path(r"G:/CV/pj/dataset/test")
-
-
-CHECKPOINT_DIR = Path(r"G:/CV/pj/m_checkpoints")
-BASE_OUTPUT_DIR = Path(r"G:/CV/pj/m_evaluation_results")
-
-
-LOG_DIR = Path("./m_log_vstain")
+ROOT_DIR = Path(__file__).resolve().parent
+TEST_DATA_ROOT = ROOT_DIR / "dataset" / "test"
+CHECKPOINT_DIR = ROOT_DIR / "m_checkpoints"
+BASE_OUTPUT_DIR = ROOT_DIR / "m_evaluation_results"
+LOG_DIR = ROOT_DIR / "m_log_vstain"
 
 LIST_CHECKPOINTS = [
     "gen_0.pth",
@@ -36,9 +33,7 @@ LIST_CHECKPOINTS = [
 ]
 
 MAX_TEST_IMAGES = 100
-# =====================================================================
-
-# Đảm bảo các thư mục tồn tại an toàn trước khi ghi file
+# Tạo thư mục
 BASE_OUTPUT_DIR.mkdir(exist_ok=True, parents=True)
 LOG_DIR.mkdir(exist_ok=True, parents=True)
 
@@ -52,7 +47,7 @@ def main_evaluation():
     
     total_images = min(len(test_loader), MAX_TEST_IMAGES)
     
-    # Khởi tạo mô hình UNetGenerator nâng cấp 
+    # Khởi tạo mô hình
     gen = UNetGenerator().to(device)
     global_summary_results = []
 
@@ -68,18 +63,18 @@ def main_evaluation():
         model_id = ckpt_path.stem  
         print(f"==================== ĐANG ĐÁNH GIÁ MODEL: {model_id} ====================")
         
-        # Thư mục lưu ảnh kết quả trực quan cho mô hình m_model
+        # Thư mục lưu ảnh
         model_output_dir = BASE_OUTPUT_DIR / f"test_results_{model_id}"
         model_output_dir.mkdir(exist_ok=True, parents=True)
         
-        # File kết quả dạng .txt sẽ xuất vào thư mục ./m_log
+        # Log kết quả
         per_image_file_path = LOG_DIR / f"eval_{model_id}.txt"
         
         checkpoint = torch.load(ckpt_path, map_location=device)
         gen.load_state_dict(checkpoint['gen'])
         gen.eval()
 
-        # Khởi tạo các hàm đo chỉ số toán học
+        # Khởi tạo hàm loss
         psnr_metric = PeakSignalNoiseRatio(data_range=1.0).to(device)
         ssim_metric = StructuralSimilarityIndexMeasure(data_range=1.0).to(device)
         fid_metric = FrechetInceptionDistance(feature=64, normalize=False).to(device)
@@ -97,10 +92,9 @@ def main_evaluation():
                         
                     real_in, real_out = real_in.to(device), real_out.to(device)
                     
-                    # Mô hình mymodel tiến hành xử lý ảnh xám đầu vào
                     fake_out = gen(real_in)
                     
-                    # Đưa ảnh về dải [0, 1] để phục vụ tính toán PSNR và SSIM chuẩn xác
+                    # Chuyển về [0, 1]
                     fake_01 = (fake_out + 1) / 2.0
                     real_01 = (real_out + 1) / 2.0
                     
@@ -114,33 +108,31 @@ def main_evaluation():
                     ssim_metric.update(fake_01, real_01)
                     lpips_metric.update(fake_out, real_out)
                     
-                    # Định dạng ảnh về uint8 [0, 255] để tính chỉ số FID
+                    # Đổi về uint8
                     fake_uint8 = ((fake_out + 1) * 127.5).clamp(0, 255).byte()
                     real_uint8 = ((real_out + 1) * 127.5).clamp(0, 255).byte()
                     fid_metric.update(real_uint8, real=True)
                     fid_metric.update(fake_uint8, real=False)
 
                  
-                    # 1. Ảnh đầu vào (Ảnh xám được đưa về định dạng lưu trữ hình ảnh)
+                    # Chuyển đổi định dạng ảnh
                     img_gray = ((real_in.squeeze(0).cpu().numpy().transpose(1, 2, 0) + 1) * 127.5).astype(np.uint8)
                     img_gray = cv2.cvtColor(img_gray, cv2.COLOR_RGB2BGR)
                     
-                    # 2. Ảnh do Generator nâng cấp (mymodel) nhuộm nhân tạo
                     img_fake = ((fake_out.squeeze(0).cpu().numpy().transpose(1, 2, 0) + 1) * 127.5).astype(np.uint8)
                     img_fake = cv2.cvtColor(img_fake, cv2.COLOR_RGB2BGR)
                     
-                    # 3. Ảnh nhuộm chuẩn gốc (Ground Truth)
                     img_real = ((real_out.squeeze(0).cpu().numpy().transpose(1, 2, 0) + 1) * 127.5).astype(np.uint8)
                     img_real = cv2.cvtColor(img_real, cv2.COLOR_RGB2BGR)
 
-                    # Ghép hàng ngang 3 ảnh: Gốc Xám | Ảnh sinh bởi mymodel | Ảnh Màu Đích
+                    # Ghép 3 ảnh
                     comparison_img = np.hstack((img_gray, img_fake, img_real))
                     
                     cv2.imwrite(str(model_output_dir / f"img_{i:04d}.png"), comparison_img)
 
                     print(f"   [Tiến độ] Đã xử lý ảnh: {i + 1}/{total_images}...")
 
-        # Tính toán giá trị trung bình trên toàn bộ tập test nhỏ
+        # Tính trung bình
         avg_psnr = psnr_metric.compute().item()
         avg_ssim = ssim_metric.compute().item()
         avg_lpips = lpips_metric.compute().item()
@@ -156,7 +148,6 @@ def main_evaluation():
             'lpips': avg_lpips
         })
 
-    # File tổng hợp so sánh toàn bộ các phiên bản lưu thẳng vào folder ./m_log bên ngoài
     summary_total_path = LOG_DIR / "eval_summary_total.txt"
     with open(summary_total_path, "w", encoding="utf-8") as f_sum:
         f_sum.write("=" * 75 + "\n")

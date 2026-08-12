@@ -5,7 +5,7 @@ class UNetGenerator(nn.Module):
     def __init__(self, in_channels=3, out_channels=3):
         super().__init__()
         
-        # Encoder (Giảm chiều dữ liệu: 256 -> 128 -> 64 -> 32 -> 16)
+        # Encoder 
         self.enc1 = nn.Sequential(
             nn.Conv2d(in_channels, 64, kernel_size=4, stride=2, padding=1),
             nn.LeakyReLU(0.2, inplace=True)
@@ -25,8 +25,7 @@ class UNetGenerator(nn.Module):
             nn.BatchNorm2d(512),
             nn.LeakyReLU(0.2, inplace=True)
         )
-        
-        # Decoder (Tăng kích thước đối xứng: 16 -> 32 -> 64 -> 128 -> 256)
+        # Decoder
         self.dec1 = nn.Sequential(
             nn.ConvTranspose2d(512, 256, kernel_size=4, stride=2, padding=1),
             nn.BatchNorm2d(256),
@@ -49,18 +48,16 @@ class UNetGenerator(nn.Module):
         )
 
     def forward(self, x):
-        # Đường Encoder đi xuống
-        e1 = self.enc1(x)     # Kích thước đầu ra: [B, 64, 128, 128]
-        e2 = self.enc2(e1)    # Kích thước đầu ra: [B, 128, 64, 64]
-        e3 = self.enc3(e2)    # Kích thước đầu ra: [B, 256, 32, 32]
-        e4 = self.enc4(e3)    # Kích thước đầu ra: [B, 512, 16, 16]
+        e1 = self.enc1(x)     
+        e2 = self.enc2(e1)    
+        e3 = self.enc3(e2)    
+        e4 = self.enc4(e3)    
         
-        # Đường Decoder đi lên kèm Skip Connections gộp các đặc trưng không gian
-        d1 = self.dec1(e4)    # Tăng lên kích thước: [B, 256, 32, 32]
-        d2 = self.dec2(torch.cat([d1, e3], dim=1))  # Gộp 256+256 kênh -> [B, 128, 64, 64]
-        d3 = self.dec3(torch.cat([d2, e2], dim=1))  # Gộp 128+128 kênh -> [B, 64, 128, 128]
+        d1 = self.dec1(e4)    
+        d2 = self.dec2(torch.cat([d1, e3], dim=1))  
+        d3 = self.dec3(torch.cat([d2, e2], dim=1)) 
         
-        out = self.final(torch.cat([d3, e1], dim=1)) # Gộp 64+64 kênh -> [B, 3, 256, 256]
+        out = self.final(torch.cat([d3, e1], dim=1)) 
         return out
 
 class PatchDiscriminator(nn.Module):

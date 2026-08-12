@@ -5,13 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}TrueTissue | Clinical Pathology AI Suite{% endblock %}</title>
     <meta name="description" content="State-of-the-art AI diagnostic platform for virtual histology staining, tumor abnormality prediction, and cellular sharpness upscaling.">
-    <!-- Custom Design System CSS -->
+    <!-- CSS dùng chung -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     {% block head %}{% endblock %}
 </head>
 <body>
 
-    <!-- Top Navigation Bar -->
+    <!-- Thanh điều hướng -->
     <header class="navbar">
         <a href="{{ url_for('index') }}" class="brand">
             <div class="brand-icon">🧬</div>
@@ -31,19 +31,19 @@
         </nav>
     </header>
 
-    <!-- Main Content Body -->
+    <!-- Nội dung chính -->
     <main class="main-container">
         {% block content %}{% endblock %}
     </main>
 
-    <!-- Global Full-screen Loader Overlay -->
+    <!-- Giao diện chờ tải dữ liệu toàn màn hình -->
     <div id="loader-overlay" class="loader-overlay">
         <div class="spinner"></div>
         <div id="loader-text" class="loader-text">AI Pipeline Processing...</div>
         <div id="loader-sub" class="loader-sub">Executing deep neural networks on tissue sample</div>
     </div>
 
-    <!-- Global Full-screen Zoom Lightbox Modal -->
+    <!-- Modal phóng to ảnh -->
     <div id="lightbox" class="lightbox">
         <div class="lightbox-content">
             <div class="lightbox-header">
@@ -56,7 +56,7 @@
         </div>
     </div>
 
-    <!-- Core Javascript Scripts -->
+    <!-- Script Javascript chính -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     {% block scripts %}{% endblock %}
 </body>

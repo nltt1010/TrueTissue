@@ -1,7 +1,4 @@
-/**
- * TrueTissue Clinical AI Web Application - Comparison Suite Logic
- * Handles simultaneous execution of Base Model and My Model and large direct side-by-side display.
- */
+// Logic trang so sánh 2 model
 
 document.addEventListener("DOMContentLoaded", () => {
     if (document.getElementById("compare-form")) {
@@ -60,7 +57,7 @@ function renderComparisonResults(dataArray) {
         galleryContainer.style.display = "block";
         gallery.innerHTML = "";
         
-        // Format gallery as a real 2D grid matching the sliced image
+        // Xếp layout lưới 2D
         const totalCols = dataArray[0].patch_info.total_cols;
         gallery.style.display = "grid";
         gallery.style.gridTemplateColumns = `repeat(${totalCols}, max-content)`;
@@ -70,7 +67,7 @@ function renderComparisonResults(dataArray) {
         
         dataArray.forEach((slice, idx) => {
             const thumb = document.createElement("img");
-            // Use basemodel grayscale as thumbnail
+            // Dùng ảnh xám của basemodel làm thumbnail
             thumb.src = slice.basemodel.images.grayscale;
             thumb.style.width = "80px";
             thumb.style.height = "80px";
@@ -79,7 +76,7 @@ function renderComparisonResults(dataArray) {
             thumb.style.cursor = "pointer";
             thumb.style.border = idx === 0 ? "3px solid var(--accent-cyan)" : "3px solid transparent";
             
-            // Highlight if either model predicts abnormal
+            // Bôi đỏ nếu 1 trong 2 model báo bất thường
             const isAbnormal = slice.basemodel.prediction.is_abnormal || slice.mymodel.prediction.is_abnormal;
             if (isAbnormal) {
                 thumb.style.boxShadow = "0 0 10px rgba(255, 60, 60, 0.9)";
@@ -135,7 +132,7 @@ function populateModelColumn(prefix, modData, patch_info) {
     if (probNormal) probNormal.textContent = `${modData.prediction.prob_normal}%`;
     if (regCount) regCount.textContent = modData.prediction.num_regions_detected;
 
-    // Direct Display of Large 4x Ultra-Sharp Images
+    // Hiển thị ảnh phóng to 4x
     const imgStainLarge = document.getElementById(`img-stain-${prefix}-large`);
     const imgCamLarge = document.getElementById(`img-cam-${prefix}-large`);
     const badgeCkpt = document.getElementById(`badge-ckpt-${prefix}`);

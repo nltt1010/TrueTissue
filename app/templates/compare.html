@@ -9,7 +9,7 @@
 </div>
 
 <div class="compare-grid">
-    <!-- Left Sidebar Control Panel -->
+    <!-- Bảng điều khiển -->
     <aside class="glass-card glow-border control-panel">
         <form id="compare-form" enctype="multipart/form-data">
             <div class="panel-section">
@@ -67,9 +67,9 @@
         </form>
     </aside>
 
-    <!-- Right Comparison Results Workspace (Large Direct Side-by-Side Display) -->
+    <!-- Khu vực hiển thị so sánh -->
     <section class="results-area">
-        <!-- Placeholder State -->
+        <!-- Giao diện chờ -->
         <div id="placeholder-state" class="placeholder-state">
             <div class="placeholder-icon">🔄</div>
             <h2 class="placeholder-title">Ready for Multi-Model Evaluation</h2>
@@ -78,21 +78,21 @@
             </p>
         </div>
 
-        <!-- Dynamic Results Content -->
+        <!-- Nội dung kết quả so sánh -->
         <div id="compare-results-content" style="display: none; flex-direction: column; gap: 2.5rem;">
             
-            <!-- Slice Gallery (For large images cut into N x M patches) -->
+            <!-- Danh sách phần ảnh con -->
             <div id="compare-slice-gallery-container" style="display: none;">
                 <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem; color: var(--text-primary);">📍 Lưới các phần ảnh (Click để xem chi tiết)</h3>
                 <div id="compare-slice-gallery" style="display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 0.5rem;">
-                    <!-- Thumbnails will be injected here -->
+                    <!-- Ảnh thu nhỏ sẽ hiển thị tại đây -->
                 </div>
             </div>
 
-            <!-- Side-by-Side Model Diagnostics Columns (No Slider / Direct Large View) -->
+            <!-- Các cột hiển thị so sánh mô hình -->
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem; align-items: start;">
                 
-                <!-- COLUMN 1: BASE MODEL -->
+                <!-- CỘT 1: BASE MODEL -->
                 <div style="display: flex; flex-direction: column; gap: 1.5rem;">
                     <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; background: rgba(139, 92, 246, 0.15); border: 1px solid rgba(139, 92, 246, 0.4); border-radius: var(--radius-md);">
                         <span style="font-size: 1.5rem;">🔷</span>
@@ -102,7 +102,7 @@
                         </div>
                     </div>
 
-                    <!-- Base Banner -->
+                    <!-- Kết quả Base Model -->
                     <div id="diag-banner-base" class="diag-banner status-normal" style="padding: 1.25rem;">
                         <div class="diag-left">
                             <div id="diag-icon-base" class="diag-icon" style="width: 44px; height: 44px; font-size: 1.25rem;">✅</div>
@@ -124,7 +124,7 @@
                         </div>
                     </div>
 
-                    <!-- Base Large Stained Image (Direct 1024x1024 View) -->
+                    <!-- Ảnh nhuộm Base Model -->
                     <div class="large-image-card">
                         <div class="image-header">
                             <span class="image-title">🎨 Base Stained (4x Ultra-Sharp)</span>
@@ -135,7 +135,7 @@
                         </div>
                     </div>
 
-                    <!-- Base Large CAM Circled (Direct 1024x1024 View) -->
+                    <!-- Ảnh khoanh vùng Base Model -->
                     <div class="large-image-card">
                         <div class="image-header">
                             <span class="image-title">⭕ Base Abnormality Map (4x Sharp)</span>
@@ -147,7 +147,7 @@
                     </div>
                 </div>
 
-                <!-- COLUMN 2: MY MODEL -->
+                <!-- CỘT 2: MY MODEL -->
                 <div style="display: flex; flex-direction: column; gap: 1.5rem;">
                     <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: var(--radius-md);">
                         <span style="font-size: 1.5rem;">✨</span>
@@ -157,7 +157,7 @@
                         </div>
                     </div>
 
-                    <!-- My Model Banner -->
+                    <!-- Kết quả My Model -->
                     <div id="diag-banner-my" class="diag-banner status-normal" style="padding: 1.25rem;">
                         <div class="diag-left">
                             <div id="diag-icon-my" class="diag-icon" style="width: 44px; height: 44px; font-size: 1.25rem;">✅</div>
@@ -179,7 +179,7 @@
                         </div>
                     </div>
 
-                    <!-- My Model Large Stained Image (Direct 1024x1024 View) -->
+                    <!-- Ảnh nhuộm My Model -->
                     <div class="large-image-card">
                         <div class="image-header">
                             <span class="image-title">🎨 MyModel Stained (4x Ultra-Sharp)</span>
@@ -190,7 +190,7 @@
                         </div>
                     </div>
 
-                    <!-- My Model Large CAM Circled (Direct 1024x1024 View) -->
+                    <!-- Ảnh khoanh vùng My Model -->
                     <div class="large-image-card">
                         <div class="image-header">
                             <span class="image-title">⭕ MyModel Abnormality Map (4x Sharp)</span>

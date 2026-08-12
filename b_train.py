@@ -6,12 +6,13 @@ from utils import StainingDataset
 from pathlib import Path
 from b_model import UNetGenerator, PatchDiscriminator
 
-# --- CẤU HÌNH ---
-DATA_ROOT = Path(r"G:/CV/pj/dataset/train")
-CHECKPOINT_DIR = Path(r"G:/CV/pj/b_checkpoints")
+ROOT_DIR = Path(__file__).resolve().parent
+DATA_ROOT = ROOT_DIR / "dataset" / "train"
+CHECKPOINT_DIR = ROOT_DIR / "b_checkpoints"
 CHECKPOINT_DIR.mkdir(exist_ok=True, parents=True)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-LOG_FILE_PATH = "./b_log/train_log.txt"
+LOG_FILE_PATH = ROOT_DIR / "b_log" / "train_log.txt"
+LOG_FILE_PATH.parent.mkdir(exist_ok=True, parents=True)
 
 # Data Loader
 train_loader = DataLoader(StainingDataset(DATA_ROOT), batch_size=4, shuffle=True)
@@ -24,41 +25,32 @@ opt_d = optim.Adam(disc.parameters(), lr=0.0002, betas=(0.5, 0.999))
 criterion_gan = nn.BCEWithLogitsLoss()
 criterion_l1 = nn.L1Loss()
 
-# =====================================================================
-# --- CƠ CHẾ RESUME TRAINING (TỰ ĐỘNG TRAIN TIẾP) ---
+# Resume training
 start_epoch = 0
-# Chỉ định file checkpoint mới nhất bạn đang có (ở đây là gen_1.pth)
 RESUME_CHECKPOINT = CHECKPOINT_DIR / "gen_6.pth" 
 
 if RESUME_CHECKPOINT.exists():
-    print(f"\n[RESUME] Tìm thấy file checkpoint cũ: {RESUME_CHECKPOINT.name}. Đang nạp dữ liệu...")
+    print(f"\n[RESUME] Đang nạp checkpoint: {RESUME_CHECKPOINT.name}...")
     checkpoint = torch.load(RESUME_CHECKPOINT, map_location=device)
     
-    # 1. Phục hồi trọng số cho Generator
     gen.load_state_dict(checkpoint['gen'])
-    
-    # 2. Tính toán Epoch tiếp theo sẽ chạy (Epoch cũ + 1)
     start_epoch = checkpoint['epoch'] + 1
     
-    # 3. Đọc thêm các thành phần khác nếu tồn tại (để tương thích với các checkpoint lưu trọn vẹn sau này)
     if 'disc' in checkpoint:
         disc.load_state_dict(checkpoint['disc'])
         print("-> Đã phục hồi trọng số Discriminator từ checkpoint.")
     else:
-        print("-> Lưu ý: Checkpoint cũ 'gen_1.pth' không chứa Discriminator. Hệ thống sẽ để bộ phân biệt tự học lại từ đầu.")
+        print("-> Không tìm thấy Discriminator trong checkpoint.")
         
     if 'opt_g' in checkpoint:
         opt_g.load_state_dict(checkpoint['opt_g'])
     if 'opt_d' in checkpoint:
         opt_d.load_state_dict(checkpoint['opt_d'])
         
-    print(f"[RESUME] Nạp thành công! Tiến trình sẽ tiếp tục chạy từ Epoch {start_epoch}\n")
+    print(f"[RESUME] Bắt đầu từ Epoch {start_epoch}\n")
 else:
-    print("\n[VỪA CHẠY] Không tìm thấy checkpoint cũ hoặc cấu hình chạy mới. Bắt đầu từ Epoch 0.\n")
-# =====================================================================
+    print("\n[START] Bắt đầu train từ Epoch 0.\n")
 
-# Training loop
-# Thay đổi cấu trúc lặp để bắt đầu từ start_epoch thay vì mặc định bằng 0
 for epoch in range(start_epoch, 10):
     gen.train()
     for i, (real_in, real_out) in enumerate(train_loader):

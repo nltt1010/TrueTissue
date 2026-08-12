@@ -5,35 +5,35 @@ from flask import Flask, render_template, request, jsonify, send_from_directory
 
 from services.tissue_analyzer import TissueAnalyzer
 
-# Initialize Flask app with structured static and template directories
+# Khởi tạo ứng dụng Flask
 app = Flask(__name__, static_folder="static", template_folder="templates")
 app.config["MAX_CONTENT_LENGTH"] = 32 * 1024 * 1024  # 32MB max upload
 
-# Ensure upload and output directories exist
+# Đảm bảo thư mục upload và output tồn tại
 UPLOADS_DIR = Path(__path__[0]) if hasattr(app, '__path__') else Path(__file__).resolve().parent / "static" / "uploads"
 OUTPUTS_DIR = Path(__file__).resolve().parent / "static" / "outputs"
 UPLOADS_DIR.mkdir(exist_ok=True, parents=True)
 OUTPUTS_DIR.mkdir(exist_ok=True, parents=True)
 
-# Initialize AI Engine
+# Khởi tạo AI Engine
 analyzer = TissueAnalyzer()
 
 
 @app.route("/")
 def index():
-    """Renders the primary Diagnostic Staining & Abnormality Analysis Workspace."""
+    """Hiển thị không gian làm việc chính."""
     return render_template("index.html", active_page="analyze")
 
 
 @app.route("/compare")
 def compare():
-    """Renders the Multi-Model & Pipeline Step Comparison Suite."""
+    """Hiển thị trang so sánh mô hình."""
     return render_template("compare.html", active_page="compare")
 
 
 @app.route("/api/checkpoints", methods=["GET"])
 def get_checkpoints():
-    """Returns all discovered checkpoint filenames for basemodel, mymodel, and classifier."""
+    """Trả về danh sách checkpoint có sẵn."""
     try:
         checkpoints = analyzer.get_available_checkpoints()
         return jsonify({"status": "success", "data": checkpoints}), 200
@@ -43,7 +43,7 @@ def get_checkpoints():
 
 @app.route("/api/samples", methods=["GET"])
 def get_samples():
-    """Returns available built-in demo test tissue samples for instant testing."""
+    """Trả về danh sách ảnh mẫu."""
     try:
         samples = analyzer.get_demo_samples()
         return jsonify({"status": "success", "data": samples}), 200
@@ -52,7 +52,7 @@ def get_samples():
 
 
 def _get_input_image_path(req):
-    """Helper to resolve whether the user uploaded a file or selected a built-in demo sample."""
+    """Xử lý đường dẫn ảnh đầu vào."""
     if "file" in req.files and req.files["file"].filename != "":
         file = req.files["file"]
         ext = os.path.splitext(file.filename)[1].lower()
@@ -74,10 +74,7 @@ def _get_input_image_path(req):
 
 @app.route("/api/analyze", methods=["POST"])
 def analyze():
-    """
-    Executes single-model analysis pipeline:
-    Stain (Base or My Model) -> Predict Abnormality -> Circle Tumor Regions -> 4x High-Res Sharpening.
-    """
+    """Chạy pipeline phân tích cho một mô hình."""
     try:
         image_path = _get_input_image_path(request)
         model_type = request.form.get("model_type", "mymodel")
@@ -100,10 +97,7 @@ def analyze():
 
 @app.route("/api/compare", methods=["POST"])
 def compare_models():
-    """
-    Executes simultaneous comparative analysis on BOTH Base Model and My Model.
-    Returns metrics and visual artifacts for side-by-side & slider evaluation.
-    """
+    """Chạy so sánh giữa Base Model và My Model."""
     try:
         image_path = _get_input_image_path(request)
         stain_ckpt_base = request.form.get("stain_ckpt_base") or None

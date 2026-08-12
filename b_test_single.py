@@ -1,15 +1,14 @@
-﻿import torch
+import torch
 import cv2
 import numpy as np
 from pathlib import Path
 from b_model import UNetGenerator
 
-# TEST_DATA_ROOT should point to a single grayscale image file for b_test_single
-TEST_DATA_ROOT = Path(r"G:/CV/pj/ggtest/images.jpg")
-CHECKPOINT_DIR = Path(r"G:/CV/pj/b_checkpoints")
-BASE_OUTPUT_DIR = Path(r"G:/CV/pj/b_evaluation_results")
+ROOT_DIR = Path(__file__).resolve().parent
+TEST_DATA_ROOT = ROOT_DIR / "ggtest" / "images.jpg"
+CHECKPOINT_DIR = ROOT_DIR / "b_checkpoints"
+BASE_OUTPUT_DIR = ROOT_DIR / "b_evaluation_results"
 
-# =====================================================================
 LIST_CHECKPOINTS = [
     "gen_0.pth",
     "gen_1.pth",
@@ -19,7 +18,7 @@ LIST_CHECKPOINTS = [
     "gen_5.pth",
     "gen_6.pth"
 ]
-# =====================================================================
+
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

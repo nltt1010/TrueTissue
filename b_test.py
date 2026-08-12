@@ -10,14 +10,14 @@ from torchmetrics.image import PeakSignalNoiseRatio, StructuralSimilarityIndexMe
 from torchmetrics.image.fid import FrechetInceptionDistance
 from torchmetrics.image.lpip import LearnedPerceptualImagePatchSimilarity
 
-TEST_DATA_ROOT = Path(r"G:/CV/pj/dataset/test")
+ROOT_DIR = Path(__file__).resolve().parent
+TEST_DATA_ROOT = ROOT_DIR / "dataset" / "test"
 
-CHECKPOINT_DIR = Path(r"G:/CV/pj/b_checkpoints")
-BASE_OUTPUT_DIR = Path(r"G:/CV/pj/b_evaluation_results")
+CHECKPOINT_DIR = ROOT_DIR / "b_checkpoints"
+BASE_OUTPUT_DIR = ROOT_DIR / "b_evaluation_results"
 
-LOG_DIR = Path("./b_log_vstain")
+LOG_DIR = ROOT_DIR / "b_log_vstain"
 
-# =====================================================================
 LIST_CHECKPOINTS = [
     "gen_0.pth",
     "gen_1.pth",
@@ -32,9 +32,7 @@ LIST_CHECKPOINTS = [
 ]
 
 MAX_TEST_IMAGES = 100
-# =====================================================================
-
-# Đảm bảo các thư mục tồn tại an toàn trước khi ghi file
+# Tạo thư mục nếu chưa có
 BASE_OUTPUT_DIR.mkdir(exist_ok=True, parents=True)
 LOG_DIR.mkdir(exist_ok=True, parents=True)
 
@@ -63,11 +61,11 @@ def main_evaluation():
         model_id = ckpt_path.stem  
         print(f"==================== ĐANG ĐÁNH GIÁ MODEL: {model_id} ====================")
         
-        # Thư mục lưu ảnh kết quả trực quan (Giữ nguyên trong folder kết quả chính)
+        # Thư mục lưu ảnh
         model_output_dir = BASE_OUTPUT_DIR / f"test_results_{model_id}"
         model_output_dir.mkdir(exist_ok=True, parents=True)
         
-        # File .txt của từng model sẽ được lưu vào thư mục ./log bên ngoài
+        # Log từng model
         per_image_file_path = LOG_DIR / f"eval_{model_id}.txt"
         
         checkpoint = torch.load(ckpt_path, map_location=device)
@@ -110,7 +108,7 @@ def main_evaluation():
                     fid_metric.update(real_uint8, real=True)
                     fid_metric.update(fake_uint8, real=False)
 
-                    # Lưu ảnh trực quan đối chiếu
+                    # Lưu ảnh kết quả
                     img_gray = ((real_in.squeeze(0).cpu().numpy().transpose(1, 2, 0) + 1) * 127.5).astype(np.uint8)
                     img_gray = cv2.cvtColor(img_gray, cv2.COLOR_RGB2BGR)
                     
@@ -141,7 +139,7 @@ def main_evaluation():
             'lpips': avg_lpips
         })
 
-    # File tổng hợp kết quả so sánh cũng sẽ xuất thẳng vào thư mục ./log bên ngoài
+
     summary_total_path = LOG_DIR / "eval_summary_total.txt"
     with open(summary_total_path, "w", encoding="utf-8") as f_sum:
         f_sum.write("=" * 75 + "\n")

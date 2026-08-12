@@ -9,13 +9,13 @@
 </div>
 
 <div class="workspace-grid">
-    <!-- Left Sidebar Control Panel -->
+    <!-- Bảng điều khiển -->
     <aside class="glass-card glow-border control-panel">
         <form id="analyze-form" enctype="multipart/form-data">
             <div class="panel-section">
                 <label class="panel-label"><span>📁</span> 1. Tissue Sample Source</label>
                 
-                <!-- Clean Dropzone for custom upload -->
+                <!-- Vùng kéo thả file tải lên -->
                 <div id="dropzone" class="dropzone">
                     <input type="file" id="file-input" name="file" accept=".png,.jpg,.jpeg,.tif,.tiff,.bmp" style="display: none;">
                     <div class="dropzone-icon">☁️</div>
@@ -23,7 +23,7 @@
                     <div class="dropzone-hint">Supports PNG, JPG, TIF, BMP (Grayscale or Color)</div>
                 </div>
 
-                <!-- Preview of uploaded file -->
+                <!-- Xem trước file tải lên -->
                 <div id="file-preview" class="file-preview">
                     <img id="file-thumb" src="" alt="Thumbnail">
                     <div class="file-info">
@@ -82,9 +82,9 @@
         </form>
     </aside>
 
-    <!-- Right Workspace Display Area (Large Direct Display / No Sliding required) -->
+    <!-- Khu vực hiển thị kết quả -->
     <section class="results-area">
-        <!-- Placeholder Empty State -->
+        <!-- Giao diện chờ -->
         <div id="placeholder-state" class="placeholder-state">
             <div class="placeholder-icon">🦠</div>
             <h2 class="placeholder-title">Awaiting Histology Sample</h2>
@@ -93,18 +93,18 @@
             </p>
         </div>
 
-        <!-- Dynamic Results Workspace (Hidden initially) -->
+        <!-- Nội dung kết quả động -->
         <div id="results-content" style="display: none; flex-direction: column; gap: 2rem;">
             
-            <!-- Slice Gallery (For large images cut into N x M patches) -->
+            <!-- Danh sách phần ảnh con -->
             <div id="slice-gallery-container" style="display: none;">
                 <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem; color: var(--text-primary);">📍 Lưới các phần ảnh (Click để xem chi tiết)</h3>
                 <div id="slice-gallery" style="display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 0.5rem;">
-                    <!-- Thumbnails will be injected here -->
+                    <!-- Ảnh thu nhỏ sẽ hiển thị tại đây -->
                 </div>
             </div>
 
-            <!-- 1. Diagnostic Banner Badge Card -->
+            <!-- 1. Thông báo kết quả chẩn đoán -->
             <div id="diag-banner" class="diag-banner status-normal">
                 <div class="diag-left">
                     <div id="diag-icon-el" class="diag-icon">✅</div>
@@ -130,9 +130,9 @@
                 </div>
             </div>
 
-            <!-- 2. Large Direct Display Grid (1024x1024 Ultra-Sharp Images directly on screen) -->
+            <!-- 2. Lưới hiển thị ảnh trực tiếp -->
             <div class="large-display-grid">
-                <!-- Large Card 1: 4x Ultra-Sharp Stained Tissue -->
+                <!-- Ảnh nhuộm siêu nét -->
                 <div class="large-image-card">
                     <div class="image-header">
                         <span class="image-title"><span>🎨</span> 4x Ultra-Sharp Stained Tissue</span>
@@ -143,7 +143,7 @@
                     </div>
                 </div>
 
-                <!-- Large Card 2: 4x Ultra-Sharp Abnormality Map & Circling -->
+                <!-- Ảnh khoanh vùng bất thường -->
                 <div class="large-image-card">
                     <div class="image-header">
                         <span class="image-title"><span>⭕</span> 4x Abnormality Map & Circling</span>
@@ -155,7 +155,7 @@
                 </div>
             </div>
 
-            <!-- 3. Reference Card: Original Grayscale Input -->
+            <!-- 3. Ảnh đầu vào tham khảo -->
             <div class="glass-card" style="padding: 1.25rem;">
                 <div style="display: flex; align-items: center; justify-content: space-between;">
                     <div style="display: flex; align-items: center; gap: 1rem;">

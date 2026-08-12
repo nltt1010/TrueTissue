@@ -1,7 +1,4 @@
-/**
- * TrueTissue Clinical AI Web Application - Main Workspace Logic
- * Handles file drag-and-drop, single-model AI analysis, and large direct display of 4x ultra-sharp images.
- */
+// Logic chính của ứng dụng: upload, phân tích và hiển thị ảnh
 
 document.addEventListener("DOMContentLoaded", () => {
     initSharedControls();
@@ -13,11 +10,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
 let selectedFile = null;
 
-/**
- * Initializes shared controls (file upload dropzone and checkpoint loader).
- */
+// Khởi tạo các control chung
 function initSharedControls() {
-    // Fetch checkpoints for dropdowns
+    // Lấy danh sách checkpoints
     fetch("/api/checkpoints")
         .then(res => res.json())
         .then(data => {
@@ -30,7 +25,7 @@ function initSharedControls() {
         })
         .catch(err => console.error("Failed to load checkpoints:", err));
 
-    // Setup Drag and Drop Zone
+    // Cài đặt khu vực kéo thả file
     const dropzone = document.getElementById("dropzone");
     const fileInput = document.getElementById("file-input");
     const filePreview = document.getElementById("file-preview");
@@ -86,7 +81,7 @@ function handleFileSelect(file) {
     if (fileName) fileName.textContent = file.name;
     if (fileSize) fileSize.textContent = `${(file.size / 1024).toFixed(1)} KB`;
 
-    // Preview thumbnail
+    // Xem trước ảnh thu nhỏ
     const reader = new FileReader();
     reader.onload = (e) => {
         if (fileThumb) fileThumb.src = e.target.result;
@@ -123,9 +118,7 @@ function populateCheckpoints(elementId, ckptList) {
     });
 }
 
-/**
- * Initializes Single Model Analysis Workspace
- */
+// Khởi tạo giao diện phân tích 1 model
 function initAnalyzeWorkspace() {
     const form = document.getElementById("analyze-form");
     form.addEventListener("submit", async (e) => {
@@ -161,7 +154,7 @@ function initAnalyzeWorkspace() {
         }
     });
 
-    // Handle Model Radio Change to update Checkpoint Dropdown dynamically
+    // Cập nhật danh sách checkpoint khi đổi model
     const radios = document.querySelectorAll('input[name="model_type"]');
     radios.forEach(radio => {
         radio.addEventListener("change", () => {
@@ -177,9 +170,7 @@ function initAnalyzeWorkspace() {
     });
 }
 
-/**
- * Renders Single Model Analysis Results directly into Dashboard UI in large full-size dimensions
- */
+// Hiển thị kết quả phân tích
 function renderSingleResults(dataArray) {
     if (!Array.isArray(dataArray) || dataArray.length === 0) return;
 
@@ -195,7 +186,7 @@ function renderSingleResults(dataArray) {
         galleryContainer.style.display = "block";
         gallery.innerHTML = "";
         
-        // Format gallery as a real 2D grid matching the sliced image
+        // Xếp layout lưới 2D cho ảnh
         const totalCols = dataArray[0].patch_info.total_cols;
         gallery.style.display = "grid";
         gallery.style.gridTemplateColumns = `repeat(${totalCols}, max-content)`;
@@ -213,7 +204,7 @@ function renderSingleResults(dataArray) {
             thumb.style.cursor = "pointer";
             thumb.style.border = idx === 0 ? "3px solid var(--accent-cyan)" : "3px solid transparent";
             
-            // Highlight color if abnormal
+            // Đổi màu nếu có bất thường
             if (slice.prediction.is_abnormal) {
                 thumb.style.boxShadow = "0 0 10px rgba(255, 60, 60, 0.9)";
             }
@@ -221,7 +212,7 @@ function renderSingleResults(dataArray) {
             thumb.title = `Patch [Row ${slice.patch_info.row}, Col ${slice.patch_info.col}] - ${slice.prediction.prediction}`;
 
             thumb.addEventListener("click", () => {
-                // Update borders
+                // Cập nhật viền
                 Array.from(gallery.children).forEach(c => c.style.border = "3px solid transparent");
                 thumb.style.border = "3px solid var(--accent-cyan)";
                 renderViewForSlice(slice);
@@ -233,15 +224,15 @@ function renderSingleResults(dataArray) {
         galleryContainer.style.display = "none";
     }
 
-    // Render the first slice by default
+    // Mặc định hiển thị phần ảnh đầu tiên
     renderViewForSlice(dataArray[0]);
 
-    // Scroll smoothly to results
+    // Cuộn mượt xuống kết quả
     resultsArea.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function renderViewForSlice(data) {
-    // 1. Diagnostic Banner
+    // 1. Thông báo chẩn đoán
     const banner = document.getElementById("diag-banner");
     const diagIcon = document.getElementById("diag-icon-el");
     const diagText = document.getElementById("diag-result-text");
@@ -264,7 +255,7 @@ function renderViewForSlice(data) {
     if (probNormal) probNormal.textContent = `${data.prediction.prob_normal}%`;
     if (regCount) regCount.textContent = data.prediction.num_regions_detected;
 
-    // 2. Direct Display of 4x Ultra-Sharp Large Images
+    // 2. Hiển thị ảnh lớn
     const imgStainLarge = document.getElementById("img-stain-large");
     const imgCamLarge = document.getElementById("img-cam-large");
     const imgGray = document.getElementById("img-gray");
@@ -275,12 +266,10 @@ function renderViewForSlice(data) {
     if (imgGray) imgGray.src = data.images.grayscale;
     if (badgeModel) badgeModel.textContent = `${data.model_used.toUpperCase()} (1024x1024)`;
     
-    // Note: Inline zoom/pan removed, now using Lightbox Modal on click
+    // Dùng Lightbox thay cho zoom/pan nội tuyến
 }
 
-/**
- * Optional Lightbox modal logic for click-to-zoom if user wishes to inspect even closer
- */
+// Xử lý modal phóng to ảnh
 function initLightbox() {
     const lightbox = document.getElementById("lightbox");
     const closeBtn = document.getElementById("lightbox-close");
@@ -289,7 +278,7 @@ function initLightbox() {
 
     if (!lightbox || !img || !wrapper) return;
 
-    // Strict styling for predictable math
+    // Gán style cứng để dễ tính toán
     wrapper.style.overflow = "hidden";
     wrapper.style.position = "relative";
     
@@ -332,28 +321,28 @@ function initLightbox() {
         }
     });
 
-    // Zoom on wheel (Wrapper acts as the stable viewport)
+    // Zoom bằng cuộn chuột
     wrapper.addEventListener("wheel", (e) => {
         e.preventDefault();
         
         const rect = wrapper.getBoundingClientRect();
         
-        // Mouse coordinate relative to the stable wrapper (viewport)
+        // Tọa độ chuột trong khung
         const mouseX = e.clientX - rect.left;
         const mouseY = e.clientY - rect.top;
         
-        // Zoom factor
+        // Tỉ lệ zoom
         const delta = e.deltaY > 0 ? 0.85 : 1.15;
         const newScale = Math.max(1, Math.min(scale * delta, 25)); // Cap 1x -> 25x
         
         if (newScale === 1) {
             resetZoom();
         } else {
-            // imageX/Y is the coordinate inside the unscaled image under the mouse
+            // Tọa độ điểm trên ảnh gốc chưa zoom
             const imageX = (mouseX - pointX) / scale;
             const imageY = (mouseY - pointY) / scale;
             
-            // Adjust pointX/Y so that imageX/Y stays exactly under mouseX/Y
+            // Điều chỉnh để điểm zoom nằm đúng dưới chuột
             pointX = mouseX - imageX * newScale;
             pointY = mouseY - imageY * newScale;
             
@@ -362,9 +351,9 @@ function initLightbox() {
         }
     });
 
-    // Pan on drag
+    // Kéo rê ảnh
     wrapper.addEventListener("mousedown", (e) => {
-        e.preventDefault(); // Prevent native HTML image ghost drag
+        e.preventDefault(); // Chặn kéo rê ảnh mặc định của trình duyệt
         if (scale > 1) {
             isDragging = true;
             startX = e.clientX - pointX;
@@ -386,7 +375,7 @@ function initLightbox() {
         wrapper.style.cursor = "default";
     });
 
-    // Bind click events on all large images to open Lightbox
+    // Gắn sự kiện click mở modal cho ảnh lớn
     document.querySelectorAll('.large-image-container img').forEach(displayImg => {
         displayImg.style.cursor = 'zoom-in';
         displayImg.addEventListener('click', (e) => {

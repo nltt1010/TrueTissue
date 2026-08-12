@@ -6,7 +6,7 @@ import torch.nn.functional as F
 import numpy as np
 from pathlib import Path
 
-# Add parent directory (workspace root) to sys.path so we can import b_model, m_model, classifier_model
+# Thêm thư mục gốc vào sys.path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
@@ -26,21 +26,21 @@ class TissueAnalyzer:
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         print(f"[TissueAnalyzer] Initialized on device: {self.device}")
         
-        # Paths to checkpoint directories
+        # Đường dẫn tới các thư mục checkpoint
         self.b_ckpt_dir = self.root_dir / "b_checkpoints"
         self.m_ckpt_dir = self.root_dir / "m_checkpoints"
         self.cls_ckpt_dir = self.root_dir / "cls_checkpoints"
         
-        # Model cache to ensure instant subsequent inference
+        # Cache mô hình để tăng tốc
         self.model_cache = {}
 
     def get_available_checkpoints(self):
-        """Returns lists of available .pth checkpoint filenames for each model type."""
+        """Trả về danh sách checkpoint .pth."""
         def list_pths(dir_path):
             if not dir_path.exists():
                 return []
             pths = [f.name for f in dir_path.glob("*.pth")]
-            # Sort naturally if possible
+            # Sắp xếp tên file
             pths.sort()
             return pths
 
@@ -51,10 +51,10 @@ class TissueAnalyzer:
         }
 
     def get_demo_samples(self):
-        """Scans ggtest and dataset/test for quick demo sample images."""
+        """Quét tìm các ảnh mẫu."""
         samples = []
         
-        # 1. Check ggtest/images.jpg
+        # 1. Kiểm tra ggtest/images.jpg
         gg_img = self.root_dir / "ggtest" / "images.jpg"
         if gg_img.exists():
             samples.append({
@@ -65,7 +65,7 @@ class TissueAnalyzer:
                 "tissue": "General Tissue"
             })
             
-        # 2. Scan dataset/test for normal and tumor samples
+        # 2. Quét dataset/test
         test_dir = self.root_dir / "dataset" / "test"
         if test_dir.exists():
             for cat in ["tumor", "normal"]:
@@ -75,7 +75,7 @@ class TissueAnalyzer:
                 for tissue_dir in cat_dir.iterdir():
                     if tissue_dir.is_dir() and tissue_dir.name.endswith("_grayscale"):
                         tissue_name = tissue_dir.name.replace("_grayscale", "").replace("_", " ").title()
-                        # Take up to 2 images from each tissue type
+                        # Lấy tối đa 2 ảnh cho mỗi loại
                         imgs = list(tissue_dir.glob("*.*"))
                         for i, img_p in enumerate(imgs[:2]):
                             if img_p.suffix.lower() in {'.png', '.jpg', '.jpeg', '.tif', '.tiff', '.bmp'}:
@@ -89,7 +89,7 @@ class TissueAnalyzer:
         return samples
 
     def _load_model_weights(self, model, ckpt_path):
-        """Helper to load checkpoint regardless of dictionary key formatting."""
+        """Hỗ trợ load checkpoint."""
         if not ckpt_path.exists():
             raise FileNotFoundError(f"Checkpoint not found at: {ckpt_path}")
             
@@ -105,7 +105,7 @@ class TissueAnalyzer:
                 try:
                     model.load_state_dict(ckpt)
                 except Exception:
-                    # If dict has keys like 'model', try that
+                    # Thử các key phổ biến
                     for k in ['model', 'backbone', 'net']:
                         if k in ckpt:
                             model.load_state_dict(ckpt[k])
@@ -115,17 +115,17 @@ class TissueAnalyzer:
         return model
 
     def get_stain_model(self, model_type="mymodel", ckpt_name=None):
-        """Loads and caches stain model (basemodel or mymodel)."""
+        """Load và cache mô hình nhuộm màu."""
         model_type = model_type.lower()
         if model_type not in ["basemodel", "mymodel"]:
             raise ValueError(f"Invalid model_type: {model_type}. Must be 'basemodel' or 'mymodel'.")
             
-        # Determine default checkpoint if not specified
+        # Chọn checkpoint mặc định
         if not ckpt_name:
             avail = self.get_available_checkpoints()[model_type]
             if not avail:
                 raise FileNotFoundError(f"No checkpoints found for {model_type}!")
-            # Prefer gen_8 or gen_last or gen_6 if available, else last in sorted list
+            # Ưu tiên các checkpoint tốt nhất
             if "gen_8.pth" in avail and model_type == "mymodel":
                 ckpt_name = "gen_8.pth"
             elif "gen_last.pth" in avail:
@@ -154,7 +154,7 @@ class TissueAnalyzer:
         return model
 
     def get_classifier_model(self, ckpt_name=None):
-        """Loads and caches ResNet18 abnormality classifier."""
+        """Load và cache mô hình phân loại."""
         if not ckpt_name:
             avail = self.get_available_checkpoints()["classifier"]
             if not avail:
@@ -180,7 +180,7 @@ class TissueAnalyzer:
         return model
 
     def preprocess_for_staining(self, img_path_or_bgr, img_size=256):
-        """Prepares grayscale image tensor in [-1.0, 1.0] for UNet generator."""
+        """Tiền xử lý ảnh xám."""
         if isinstance(img_path_or_bgr, (str, Path)):
             img = cv2.imread(str(img_path_or_bgr), cv2.IMREAD_GRAYSCALE)
             if img is None:
@@ -200,7 +200,7 @@ class TissueAnalyzer:
         return img_tensor, img_resized
 
     def stain_image(self, img_input, model_type="mymodel", ckpt_name=None):
-        """Runs virtual staining on input image. Returns BGR stained image array."""
+        """Chạy nhuộm màu ảo."""
         model = self.get_stain_model(model_type, ckpt_name)
         img_tensor, gray_resized = self.preprocess_for_staining(img_input)
         
@@ -210,25 +210,21 @@ class TissueAnalyzer:
         fake_out = fake_out.squeeze(0).cpu().numpy()
         fake_out = ((fake_out + 1.0) * 127.5).clip(0, 255).astype(np.uint8)
         fake_out = fake_out.transpose(1, 2, 0)
-        # Convert RGB (from model training) to BGR for OpenCV processing
+        # Chuyển đổi RGB sang BGR
         stained_bgr = cv2.cvtColor(fake_out, cv2.COLOR_RGB2BGR)
         return stained_bgr, gray_resized
 
     def predict_and_circle_abnormalities(self, stained_bgr, ckpt_name=None):
-        """
-        Runs classifier to predict normal vs abnormal.
-        Uses Grad-CAM on layer4[-1] to draw bright red enclosing circles around abnormal tissue.
-        Returns: (prediction_dict, cam_circled_bgr)
-        """
+        """Phân loại và khoanh vùng bất thường."""
         model = self.get_classifier_model(ckpt_name)
         
-        # Preprocess color image for ResNet: RGB, [0.0, 1.0]
+        # Tiền xử lý ảnh cho ResNet
         img_rgb = cv2.cvtColor(stained_bgr, cv2.COLOR_BGR2RGB)
         img_tensor = img_rgb.transpose(2, 0, 1).astype(np.float32) / 255.0
         input_tensor = torch.FloatTensor(img_tensor).unsqueeze(0).to(self.device)
         input_tensor.requires_grad = True
         
-        # Setup hooks for Grad-CAM
+        # Cài đặt hook cho Grad-CAM
         activations = []
         gradients = []
         
@@ -241,7 +237,7 @@ class TissueAnalyzer:
             gradients.append(grad_output[0])
             
         f_handle = target_layer.register_forward_hook(forward_hook)
-        # For modern pytorch compatibility, register full backward hook if available
+        # Tương thích với Pytorch mới
         if hasattr(target_layer, 'register_full_backward_hook'):
             b_handle = target_layer.register_full_backward_hook(backward_hook)
         else:
@@ -256,8 +252,7 @@ class TissueAnalyzer:
             prob_tumor = float(probs[1])
             is_abnormal = prob_tumor > prob_normal
             
-            # Target class index for CAM: Class 1 (Tumor/Abnormal)
-            # Always generate heatmap for Tumor class to show abnormality distribution
+            # Target class cho CAM: Class 1 (Tumor)
             score = logits[0, 1]
             score.backward()
             
@@ -265,7 +260,7 @@ class TissueAnalyzer:
                 act = activations[0]
                 grad = gradients[0]
                 
-                # Weight feature maps by average gradient
+                # Trọng số feature map
                 weights = grad.mean(dim=(2, 3), keepdim=True)
                 cam = (weights * act).sum(dim=1, keepdim=True)
                 cam = torch.relu(cam)
@@ -280,21 +275,21 @@ class TissueAnalyzer:
             f_handle.remove()
             b_handle.remove()
             
-        # Resize heatmap to match image dimensions
+        # Đổi kích thước heatmap
         h, w = stained_bgr.shape[:2]
         cam_resized = cv2.resize(cam_img, (w, h))
         
-        # Use clean copy of stained image without rainbow heatmap overlay for clear observation
+        # Dùng bản sao của ảnh đã nhuộm
         output_img = stained_bgr.copy()
         
-        # Draw bounding circles ("khoanh tròn lại") around abnormal regions
+        # Khoanh tròn các vùng bất thường
         num_circles = 0
         if is_abnormal:
-            # Threshold heatmap to isolate abnormal clusters
+            # Ngưỡng heatmap
             thresh_val = max(0.4, cam_resized.max() * 0.55)
             thresh = np.uint8((cam_resized > thresh_val) * 255)
             
-            # Morphological operations to clean up noisy spots
+            # Xử lý hình thái để làm sạch
             kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))
             thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel)
             thresh = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
@@ -303,23 +298,23 @@ class TissueAnalyzer:
             
             for contour in contours:
                 area = cv2.contourArea(contour)
-                if area > 45: # Filter out tiny artifacts
+                if area > 45: # Lọc các đốm nhỏ
                     ((cx, cy), radius) = cv2.minEnclosingCircle(contour)
                     if radius > 6:
                         num_circles += 1
                         center = (int(cx), int(cy))
                         r = int(radius) + 4
                         
-                        # 1. Outer bright red circle
+                        # 1. Vòng tròn đỏ bên ngoài
                         cv2.circle(output_img, center, r, (0, 0, 255), 2, cv2.LINE_AA)
-                        # 2. Inner cyan outline for clinical precision
+                        # 2. Viền cyan bên trong
                         cv2.drawContours(output_img, [contour], -1, (0, 255, 255), 1, cv2.LINE_AA)
                         
-                        # 3. Label badge above circle
+                        # 3. Nhãn cho vòng tròn
                         label_text = f"Abnormal: {prob_tumor*100:.1f}%"
                         text_pos = (max(5, int(cx) - r), max(20, int(cy) - r - 6))
                         
-                        # Text background box for readability
+                        # Nền chữ
                         (tw, th), _ = cv2.getTextSize(label_text, cv2.FONT_HERSHEY_SIMPLEX, 0.45, 1)
                         cv2.rectangle(output_img, (text_pos[0]-2, text_pos[1]-th-2), (text_pos[0]+tw+2, text_pos[1]+2), (0, 0, 0), -1)
                         cv2.putText(output_img, label_text, text_pos, cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 150, 255), 1, cv2.LINE_AA)
@@ -334,18 +329,11 @@ class TissueAnalyzer:
         return pred_dict, output_img
 
     def upscale_and_enhance(self, img_bgr, target_size=1024):
-        """
-        Upscales image 4x (256 -> 1024) and applies multi-stage ultra-crisp sharpness enhancement:
-        1. Lanczos4 high-resolution interpolation.
-        2. LAB Color Space CLAHE contrast enhancement on L-channel.
-        3. Heavy Gaussian Unsharp Masking.
-        4. High-pass Laplacian/kernel edge sharpening.
-        5. HSV saturation boost for vivid cellular clarity.
-        """
-        # 1. High-resolution scaling
+        """Nâng cấp ảnh lên 4x và làm sắc nét."""
+        # 1. Phóng to ảnh
         upscaled = cv2.resize(img_bgr, (target_size, target_size), interpolation=cv2.INTER_LANCZOS4)
         
-        # 2. CLAHE contrast enhancement in LAB space
+        # 2. Tăng độ tương phản CLAHE
         lab = cv2.cvtColor(upscaled, cv2.COLOR_BGR2LAB)
         l, a, b = cv2.split(lab)
         clahe = cv2.createCLAHE(clipLimit=2.8, tileGridSize=(8, 8))
@@ -353,17 +341,17 @@ class TissueAnalyzer:
         enhanced_lab = cv2.merge((cl, a, b))
         enhanced_bgr = cv2.cvtColor(enhanced_lab, cv2.COLOR_LAB2BGR)
         
-        # 3. Unsharp masking (edge sharpening)
+        # 3. Làm sắc nét viền
         blurred = cv2.GaussianBlur(enhanced_bgr, (0, 0), 2.5)
         unsharp = cv2.addWeighted(enhanced_bgr, 2.2, blurred, -1.2, 0)
         
-        # 4. High-pass kernel edge filter for razor-sharp cellular borders
+        # 4. Lọc sắc nét
         kernel = np.array([[0, -0.7, 0],
                            [-0.7, 3.8, -0.7],
                            [0, -0.7, 0]], dtype=np.float32)
         sharpened = cv2.filter2D(unsharp, -1, kernel)
         
-        # 5. HSV saturation boost to make staining and abnormality boundaries vivid and clear
+        # 5. Tăng độ bão hòa màu
         hsv = cv2.cvtColor(sharpened, cv2.COLOR_BGR2HSV).astype(np.float32)
         hsv[:, :, 1] = np.clip(hsv[:, :, 1] * 1.15, 0, 255)
         final_bgr = cv2.cvtColor(hsv.astype(np.uint8), cv2.COLOR_HSV2BGR)
@@ -371,32 +359,28 @@ class TissueAnalyzer:
         return final_bgr
 
     def run_full_analysis(self, img_input, model_type="mymodel", stain_ckpt=None, cls_ckpt=None, output_dir=None):
-        """
-        Runs the complete end-to-end clinical AI pipeline:
-        Stain -> Classify & Circle -> Upscale & Sharpen both outputs.
-        Returns dict of file names and metrics.
-        """
+        """Chạy toàn bộ pipeline AI."""
         if output_dir is None:
             output_dir = self.root_dir / "app" / "static" / "outputs"
         output_dir = Path(output_dir)
         output_dir.mkdir(exist_ok=True, parents=True)
         
-        # Unique prefix for this run
+        # Tiền tố ngẫu nhiên cho file
         import uuid
         run_id = str(uuid.uuid4())[:8]
         
-        # Step 1: Stain
+        # Bước 1: Nhuộm màu
         stained_bgr, gray_img = self.stain_image(img_input, model_type, stain_ckpt)
         
-        # Step 2: Classify & Circle
+        # Bước 2: Phân loại & Khoanh vùng
         pred_info, cam_bgr = self.predict_and_circle_abnormalities(stained_bgr, cls_ckpt)
         
-        # Step 3: Upscale & Sharpen (4x zoom: 256 -> 1024)
+        # Bước 3: Phóng to & Làm sắc nét
         upscaled_stained = self.upscale_and_enhance(stained_bgr, target_size=1024)
         upscaled_cam = self.upscale_and_enhance(cam_bgr, target_size=1024)
         upscaled_gray = cv2.resize(gray_img, (1024, 1024), interpolation=cv2.INTER_CUBIC)
         
-        # Save all artifacts
+        # Lưu các ảnh kết quả
         fn_gray = f"{run_id}_{model_type}_0_gray.png"
         fn_stain = f"{run_id}_{model_type}_1_stain.png"
         fn_cam = f"{run_id}_{model_type}_2_cam.png"
@@ -425,9 +409,7 @@ class TissueAnalyzer:
         }
 
     def run_comparison(self, img_input, stain_ckpt_base=None, stain_ckpt_my=None, cls_ckpt=None, output_dir=None):
-        """
-        Runs simultaneous analysis on BOTH Base Model and My Model for direct side-by-side comparison.
-        """
+        """Chạy phân tích trên cả 2 mô hình để so sánh."""
         import uuid
         run_id = str(uuid.uuid4())[:8]
         if output_dir is None:
@@ -451,7 +433,7 @@ class TissueAnalyzer:
             img = img_input.copy()
             
         H, W = img.shape[:2]
-        # Only skip slicing if the image is exactly or smaller than 256x256
+        # Bỏ qua cắt ảnh nếu nhỏ hơn 256x256
         if H <= 256 and W <= 256:
             return [self.run_full_analysis(img, model_type, stain_ckpt, cls_ckpt, output_dir)]
             
@@ -482,7 +464,7 @@ class TissueAnalyzer:
             img = img_input.copy()
             
         H, W = img.shape[:2]
-        # Only skip slicing if the image is exactly or smaller than 256x256
+        # Bỏ qua cắt ảnh nếu nhỏ hơn 256x256
         if H <= 256 and W <= 256:
             return [self.run_comparison(img, stain_ckpt_base, stain_ckpt_my, cls_ckpt, output_dir)]
             
