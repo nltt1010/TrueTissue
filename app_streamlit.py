@@ -133,14 +133,12 @@ if mode == "Single Analysis":
                                 st.image(img_path, caption=f'Patch [{slice_data["patch_info"]["row"]}, {slice_data["patch_info"]["col"]}]')
                                 
                                 if pred["is_abnormal"]:
-                                    st.error("Tumor Detected!")
+                                    st.error(f"Tumor: {pred['prob_tumor']}%")
+                                else:
+                                    st.success(f"Normal: {pred['prob_normal']}%")
                                 
-                                with st.expander("View Details"):
-                                    st.markdown(f"**Diagnosis:** {pred['prediction']}")
-                                    st.progress(pred['prob_tumor'] / 100, text=f"Tumor Probability: {pred['prob_tumor']}%")
-                                    
-                                    st.image(get_abs_img_path(slice_data["images"]["upscaled_stained"]), caption="Virtual Staining")
-                                    st.image(get_abs_img_path(slice_data["images"]["upscaled_cam"]), caption="Abnormality Heatmap")
+                                st.image(get_abs_img_path(slice_data["images"]["upscaled_stained"]), caption="Virtual Staining")
+                                st.image(get_abs_img_path(slice_data["images"]["upscaled_cam"]), caption="Heatmap")
                                     
             else:
                 slice_data = results[0]
@@ -202,14 +200,13 @@ elif mode == "Multi-Model Comparison":
                                 img_path = get_abs_img_path(slice_data["basemodel"]["images"]["grayscale"])
                                 st.image(img_path, caption=f'Patch [{slice_data["patch_info"]["row"]}, {slice_data["patch_info"]["col"]}]')
                                 
-                                with st.expander("Side-by-side Compare"):
-                                    st.markdown("### Base Model")
-                                    st.write(slice_data['basemodel']['prediction']['prediction'])
-                                    st.image(get_abs_img_path(slice_data["basemodel"]["images"]["upscaled_cam"]))
-                                    
-                                    st.markdown("### My Model")
-                                    st.write(slice_data['mymodel']['prediction']['prediction'])
-                                    st.image(get_abs_img_path(slice_data["mymodel"]["images"]["upscaled_cam"]))
+                                st.markdown("##### Base Model")
+                                st.info(slice_data['basemodel']['prediction']['prediction'])
+                                st.image(get_abs_img_path(slice_data["basemodel"]["images"]["upscaled_cam"]))
+                                
+                                st.markdown("##### My Model")
+                                st.success(slice_data['mymodel']['prediction']['prediction'])
+                                st.image(get_abs_img_path(slice_data["mymodel"]["images"]["upscaled_cam"]))
             
             else:
                 comp_data = results[0]
