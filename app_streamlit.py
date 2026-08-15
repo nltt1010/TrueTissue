@@ -57,13 +57,13 @@ if input_option == "Upload from Device":
         with open(file_path, "wb") as f:
             f.write(uploaded_file.getbuffer())
         image_path_to_process = str(file_path)
-        st.sidebar.image(image_path_to_process, caption="Uploaded Image", use_column_width=True)
+        st.sidebar.image(image_path_to_process, caption="Uploaded Image", use_container_width=True)
 else:
     sample_options = {s["name"]: s["path"] for s in samples}
     if sample_options:
         selected_sample = st.sidebar.selectbox("Choose Image:", list(sample_options.keys()))
         image_path_to_process = sample_options[selected_sample]
-        st.sidebar.image(image_path_to_process, caption=selected_sample, use_column_width=True)
+        st.sidebar.image(image_path_to_process, caption=selected_sample, use_container_width=True)
     else:
         st.sidebar.warning("No demo images found in demo directory.")
 
@@ -155,11 +155,11 @@ if mode == "Single Analysis":
                 
                 c1, c2, c3 = st.columns(3)
                 with c1:
-                    st.image(get_abs_img_path(slice_data["images"]["grayscale"]), caption="Original Tissue", use_column_width=True)
+                    st.image(get_abs_img_path(slice_data["images"]["grayscale"]), caption="Original Tissue", use_container_width=True)
                 with c2:
-                    st.image(get_abs_img_path(slice_data["images"]["upscaled_stained"]), caption="Virtual H&E Staining", use_column_width=True)
+                    st.image(get_abs_img_path(slice_data["images"]["upscaled_stained"]), caption="Virtual H&E Staining", use_container_width=True)
                 with c3:
-                    st.image(get_abs_img_path(slice_data["images"]["upscaled_cam"]), caption="AI Abnormality Bounding", use_column_width=True)
+                    st.image(get_abs_img_path(slice_data["images"]["upscaled_cam"]), caption="AI Abnormality Bounding", use_container_width=True)
 
 elif mode == "Multi-Model Comparison":
     st.title("⚖️ Multi-Model Comparison Suite")
