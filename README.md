@@ -70,11 +70,30 @@ The best testing result on a large dataset (35,517 test images) was recorded at 
 
 ## 5. Interface
 ### 5.1 Flask
-<p align="center">
-  <img src="https://github.com/user-attachments/assets/b174cacf-e682-4d0a-b180-83331bd8d5dd" alt="image" width="756" />
-</p>
+<table>
+  <tr>
+    <td align="center">
+      <h3>Interface</h3>
+      <img width="1890" height="889" alt="Ảnh chụp màn hình 2026-08-15 162428" src="https://github.com/user-attachments/assets/8f480bd4-6aec-4832-a96b-a512141ab160" />
+    </td>
+    <td align="center">
+      <h3>Result</h3>
+      <img width="1850" height="907" alt="image" src="https://github.com/user-attachments/assets/3274c530-c29f-4d46-bf57-9cfc47c61b19" />
+    </td>
+  </tr>
+</table>
 
 ### 5.2 Streamlit
-<p align="center">
-  <img width="1883" height="795" alt="image" src="https://github.com/user-attachments/assets/9bd93f76-f963-4688-90cc-70c6ce96eeae" />
-</p>
+<table>
+  <tr>
+    <td align="center">
+      <h3>Interface</h3>
+      <img width="1883" height="795" alt="image" src="https://github.com/user-attachments/assets/9bd93f76-f963-4688-90cc-70c6ce96eeae" />
+    </td>
+    <td align="center">
+      <h3>Result</h3>
+      <img width="1815" height="861" alt="image" src="https://github.com/user-attachments/assets/e105c784-87f3-49d1-940d-139c217e5e20" />
+    </td>
+  </tr>
+</table>
+
