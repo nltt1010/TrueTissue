@@ -15,6 +15,66 @@ from b_model import UNetGenerator as BaseUNet
 from m_model import UNetGenerator as MyUNet
 from classifier_model import ResNet18Classifier
 
+GDRIVE_FOLDER_ID = "1_3JO8FZ0Gcbhlqv6-aU2TtYnOmBY1fiI"
+
+
+def download_checkpoints_from_gdrive(root_dir=None, folder_id=GDRIVE_FOLDER_ID):
+    """Tự động tải checkpoints từ Google Drive nếu chưa tồn tại trên máy / cloud."""
+    if root_dir is None:
+        root_dir = PROJECT_ROOT
+    root_dir = Path(root_dir)
+    
+    b_dir = root_dir / "b_checkpoints"
+    m_dir = root_dir / "m_checkpoints"
+    cls_dir = root_dir / "cls_checkpoints"
+    
+    b_dir.mkdir(parents=True, exist_ok=True)
+    m_dir.mkdir(parents=True, exist_ok=True)
+    cls_dir.mkdir(parents=True, exist_ok=True)
+    
+    has_b = len(list(b_dir.glob("*.pth"))) > 0
+    has_m = len(list(m_dir.glob("*.pth"))) > 0
+    has_cls = len(list(cls_dir.glob("*.pth"))) > 0
+    
+    if has_b and has_m and has_cls:
+        return True
+        
+    print(f"[TissueAnalyzer] Checkpoints missing. Downloading from Google Drive (Folder ID: {folder_id})...")
+    try:
+        import gdown
+        import shutil
+        
+        # Tải folder từ Google Drive về root_dir
+        gdown.download_folder(id=folder_id, output=str(root_dir), quiet=False, use_cookies=False)
+        
+        # Quét tìm và đồng bộ file .pth vào đúng thư mục checkpoints
+        for pth in root_dir.rglob("*.pth"):
+            parent_name = pth.parent.name.lower()
+            pth_str = str(pth).lower()
+            
+            if "b_checkpoints" in parent_name or ("b_checkpoints" in pth_str and pth.parent != b_dir):
+                target = b_dir / pth.name
+                if not target.exists():
+                    shutil.copy2(pth, target)
+            elif "m_checkpoints" in parent_name or ("m_checkpoints" in pth_str and pth.parent != m_dir):
+                target = m_dir / pth.name
+                if not target.exists():
+                    shutil.copy2(pth, target)
+            elif "cls_checkpoints" in parent_name or ("cls_checkpoints" in pth_str and pth.parent != cls_dir):
+                target = cls_dir / pth.name
+                if not target.exists():
+                    shutil.copy2(pth, target)
+            elif "cls" in pth.name.lower() or "classifier" in pth.name.lower():
+                target = cls_dir / pth.name
+                if not target.exists():
+                    shutil.copy2(pth, target)
+                    
+        print("[TissueAnalyzer] Checkpoints download and sync completed.")
+        return True
+    except Exception as e:
+        print(f"[TissueAnalyzer] Warning: Could not download checkpoints from Google Drive: {e}")
+        return False
+
 
 class TissueAnalyzer:
     def __init__(self, root_dir=None):
@@ -31,8 +91,15 @@ class TissueAnalyzer:
         self.m_ckpt_dir = self.root_dir / "m_checkpoints"
         self.cls_ckpt_dir = self.root_dir / "cls_checkpoints"
         
+        # Tự động tải checkpoint từ Google Drive nếu thiếu
+        self.ensure_checkpoints()
+        
         # Cache mô hình để tăng tốc
         self.model_cache = {}
+
+    def ensure_checkpoints(self):
+        """Đảm bảo các file checkpoint đã sẵn sàng, tự động tải từ Google Drive nếu thiếu."""
+        return download_checkpoints_from_gdrive(self.root_dir)
 
     def get_available_checkpoints(self):
         """Trả về danh sách checkpoint .pth."""
@@ -44,11 +111,21 @@ class TissueAnalyzer:
             pths.sort()
             return pths
 
-        return {
+        ckpts = {
             "basemodel": list_pths(self.b_ckpt_dir),
             "mymodel": list_pths(self.m_ckpt_dir),
             "classifier": list_pths(self.cls_ckpt_dir)
         }
+        
+        # Nếu chưa có file nào, tự động tải và quét lại
+        if not (ckpts["basemodel"] or ckpts["mymodel"] or ckpts["classifier"]):
+            self.ensure_checkpoints()
+            ckpts = {
+                "basemodel": list_pths(self.b_ckpt_dir),
+                "mymodel": list_pths(self.m_ckpt_dir),
+                "classifier": list_pths(self.cls_ckpt_dir)
+            }
+        return ckpts
 
     def get_demo_samples(self):
         """Quét tìm các ảnh mẫu."""
@@ -141,6 +218,8 @@ class TissueAnalyzer:
             
         ckpt_dir = self.b_ckpt_dir if model_type == "basemodel" else self.m_ckpt_dir
         ckpt_path = ckpt_dir / ckpt_name
+        if not ckpt_path.exists():
+            self.ensure_checkpoints()
         
         print(f"[TissueAnalyzer] Loading stain model ({model_type}): {ckpt_name}...")
         if model_type == "basemodel":
@@ -158,6 +237,9 @@ class TissueAnalyzer:
         if not ckpt_name:
             avail = self.get_available_checkpoints()["classifier"]
             if not avail:
+                self.ensure_checkpoints()
+                avail = self.get_available_checkpoints()["classifier"]
+            if not avail:
                 raise FileNotFoundError("No checkpoints found for classifier!")
             if "cls_best.pth" in avail:
                 ckpt_name = "cls_best.pth"
@@ -171,6 +253,9 @@ class TissueAnalyzer:
             return self.model_cache[cache_key]
             
         ckpt_path = self.cls_ckpt_dir / ckpt_name
+        if not ckpt_path.exists():
+            self.ensure_checkpoints()
+            
         print(f"[TissueAnalyzer] Loading classifier model: {ckpt_name}...")
         
         model = ResNet18Classifier(num_classes=2, freeze_backbone=False).to(self.device)

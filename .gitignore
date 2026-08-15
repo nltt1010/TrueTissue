@@ -3,6 +3,11 @@ dataset/
 *.pt
 *.weights
 
+# Mở khóa (allow) 3 file model tốt nhất để upload lên GitHub/Streamlit
+# !b_checkpoints/gen_5.pth
+# !m_checkpoints/gen_8.pth
+# !cls_checkpoints/cls_best.pth
+
 
 logs/
 b_log_vstain/
