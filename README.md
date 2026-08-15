@@ -1,9 +1,22 @@
 # AI-Powered Virtual Staining & Abnormality Detection
 
 ## 1. Project Overview
-This project applies Artificial Intelligence (AI) in Healthcare, specifically focusing on **Virtual Staining**.
-In clinical practice, the traditional chemical staining process of tissue slides using H&E (Hematoxylin & Eosin) is time-consuming, labor-intensive, and costly. This project provides a Deep Learning solution to directly transform uncolored, microscopic tissue images (Grayscale) into sharp, virtually H&E-stained images.
-Furthermore, the system automatically analyzes, detects, and isolates abnormal cellular regions (Tumors) on the newly stained images. This serves as a powerful assistive tool, saving significant time for pathologists during diagnosis.
+This project applies Artificial Intelligence (AI) in Healthcare, specifically focusing on **Virtual Staining** and **Pathology Image Analysis**.
+
+In clinical practice, the traditional chemical staining process of tissue slides using H&E (Hematoxylin & Eosin) is time-consuming, labor-intensive, and costly. This project provides a Deep Learning solution to directly transform uncolored microscopic tissue images (Grayscale) into sharp, high-fidelity, virtually H&E-stained images. 
+
+Furthermore, the system automatically analyzes, detects, and isolates abnormal cellular regions (Tumors) on the generated images, serving as an assistive tool to accelerate diagnostic workflows for pathologists.
+
+### Target Tissue Types
+The model was trained and evaluated across **three distinct human tissue types**:
+* **Lymph Node**
+* **Prostate**
+* **Digestive System**
+
+### Training Environment & Constraints
+To demonstrate efficiency and lightweight deployment capabilities, the entire training pipeline and experimental workflows were conducted directly on a standard resource-constrained environment:
+* **Hardware:** Personal Laptop (CPU-only, No GPU)
+* **RAM:** 8 GB
 
 ## 2. Execution Workflow
 The system operates automatically through the following seamless pipeline:
