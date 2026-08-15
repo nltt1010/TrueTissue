@@ -141,8 +141,11 @@ if mode == "Single Analysis":
                                 st.image(get_abs_img_path(slice_data["images"]["upscaled_cam"]), caption="Heatmap")
                                     
             else:
+                st.info("DEBUG: Rendering single image results...")
                 slice_data = results[0]
                 pred = slice_data["prediction"]
+                
+                st.write("DEBUG: Prediction loaded:", pred)
                 
                 st.subheader(f"📊 Diagnosis: {pred['prediction']}")
                 
