@@ -97,6 +97,7 @@ The best testing result on a large dataset (35,517 test images) was recorded at 
 </table>
 
 ### 5.2 Streamlit
+#### Demo link: https://truetissue.streamlit.app/
 <table>
   <tr>
     <td align="center">
