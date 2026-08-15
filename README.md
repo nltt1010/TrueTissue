@@ -76,5 +76,5 @@ The best testing result on a large dataset (35,517 test images) was recorded at 
 
 ### 5.2 Streamlit
 <p align="center">
-  <img width="1883" height="907" alt="image" src="https://github.com/user-attachments/assets/914b79d7-d573-46d7-976b-8c9b5f44acad" />
+  <img width="1883" height="795" alt="image" src="https://github.com/user-attachments/assets/9bd93f76-f963-4688-90cc-70c6ce96eeae" />
 </p>
