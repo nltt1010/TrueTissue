@@ -18,8 +18,8 @@ from classifier_model import ResNet18Classifier
 GDRIVE_FOLDER_ID = "1_3JO8FZ0Gcbhlqv6-aU2TtYnOmBY1fiI"
 
 
-def download_checkpoints_from_gdrive(root_dir=None, folder_id=GDRIVE_FOLDER_ID):
-    """Tự động tải checkpoints từ Google Drive nếu chưa tồn tại trên máy / cloud."""
+def download_checkpoints_from_gdrive(root_dir=None):
+    """Tự động tải checkpoints từ Google Drive bằng file ID tĩnh."""
     if root_dir is None:
         root_dir = PROJECT_ROOT
     root_dir = Path(root_dir)
@@ -32,48 +32,44 @@ def download_checkpoints_from_gdrive(root_dir=None, folder_id=GDRIVE_FOLDER_ID):
     m_dir.mkdir(parents=True, exist_ok=True)
     cls_dir.mkdir(parents=True, exist_ok=True)
     
-    has_b = len(list(b_dir.glob("*.pth"))) > 0
-    has_m = len(list(m_dir.glob("*.pth"))) > 0
-    has_cls = len(list(cls_dir.glob("*.pth"))) > 0
+    # ID của 3 checkpoint trực tiếp do người dùng cung cấp
+    files_to_download = [
+        {
+            "id": "1X01WNpMVUKQ_xdxfnsY3WEcSLBTrJjOd",
+            "output": b_dir / "gen_5.pth",
+            "desc": "BaseModel Checkpoint (gen_5.pth)"
+        },
+        {
+            "id": "13I8IKwZCTn4bIt3whsDYq8FZR4GnFzRb",
+            "output": m_dir / "gen_8.pth",
+            "desc": "MyModel Checkpoint (gen_8.pth)"
+        },
+        {
+            "id": "1j4C8Jl3LM7APplJ2U9Us52l5ODhZuDdO",
+            "output": cls_dir / "cls_best.pth",
+            "desc": "Classifier Checkpoint (cls_best.pth)"
+        }
+    ]
     
-    if has_b and has_m and has_cls:
-        return True
-        
-    print(f"[TissueAnalyzer] Checkpoints missing. Downloading from Google Drive (Folder ID: {folder_id})...")
     try:
         import gdown
-        import shutil
+        downloaded_any = False
         
-        # Tải folder từ Google Drive về root_dir
-        gdown.download_folder(id=folder_id, output=str(root_dir), quiet=False, use_cookies=False)
-        
-        # Quét tìm và đồng bộ file .pth vào đúng thư mục checkpoints
-        for pth in root_dir.rglob("*.pth"):
-            parent_name = pth.parent.name.lower()
-            pth_str = str(pth).lower()
+        for file_info in files_to_download:
+            out_path = file_info["output"]
+            if not out_path.exists():
+                print(f"[TissueAnalyzer] Downloading {file_info['desc']}...")
+                gdown.download(id=file_info["id"], output=str(out_path), quiet=False)
+                downloaded_any = True
+                
+        if downloaded_any:
+            print("[TissueAnalyzer] Checkpoints download completed successfully!")
             
-            if "b_checkpoints" in parent_name or ("b_checkpoints" in pth_str and pth.parent != b_dir):
-                target = b_dir / pth.name
-                if not target.exists():
-                    shutil.copy2(pth, target)
-            elif "m_checkpoints" in parent_name or ("m_checkpoints" in pth_str and pth.parent != m_dir):
-                target = m_dir / pth.name
-                if not target.exists():
-                    shutil.copy2(pth, target)
-            elif "cls_checkpoints" in parent_name or ("cls_checkpoints" in pth_str and pth.parent != cls_dir):
-                target = cls_dir / pth.name
-                if not target.exists():
-                    shutil.copy2(pth, target)
-            elif "cls" in pth.name.lower() or "classifier" in pth.name.lower():
-                target = cls_dir / pth.name
-                if not target.exists():
-                    shutil.copy2(pth, target)
-                    
-        print("[TissueAnalyzer] Checkpoints download and sync completed.")
         return True
     except Exception as e:
         print(f"[TissueAnalyzer] Warning: Could not download checkpoints from Google Drive: {e}")
         return False
+
 
 
 class TissueAnalyzer:
